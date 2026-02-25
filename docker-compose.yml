@@ -1,0 +1,28 @@
+services:
+  frontend:
+    build:
+      context: ./apps/frontend
+    container_name: frontend-aslreport
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://backend:8000/api
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/frontend
+          target: /app
+          ignore:
+            - node_modules/
+
+  backend:
+    build:
+      context: ./apps/backend
+    container_name: backend-aslreport
+    ports:
+      - "8000:8000"
+    develop:
+      watch:
+      - action: sync
+        path: ./apps/backend
+        target: /app

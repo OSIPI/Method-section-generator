@@ -1,0 +1,90 @@
+---
+title: Introduction
+description: Welcome to ASL Methods Section Generator
+---
+
+# ASL Methods Section Generator
+
+The ASL Methods Section Generator is a comprehensive tool designed to assist researchers in creating standardized methods sections for Arterial Spin Labeling (ASL) research papers. This open-source project streamlines the process of extracting, validating, and formatting ASL imaging parameters from DICOM and BIDS datasets.
+
+## Project Goals
+
+- **Standardization**: Ensure consistent reporting of ASL parameters across research publications
+- **Validation**: Automatically detect inconsistencies, invalid values, and potential issues in ASL datasets
+- **Efficiency**: Reduce manual effort in writing methods sections while improving accuracy
+- **Harmonization**: Contribute to the broader goal of harmonization in perfusion MRI studies
+
+## Overview 
+
+<Image zoom theme="dark" src="/assets/apps-dr.png" alt="Applications" />
+<Image zoom theme="light" src="/assets/apps-lt.png" alt="Applications" />
+
+## Key Features
+
+### Core Functionality
+- **Comprehensive Validation**: Validates ASL parameters, M0 data, and TSV files against predefined schemas
+- **Report Generation**: Generates detailed reports with errors, warnings, and parameter summaries
+- **DICOM to BIDS Conversion**: Automatic conversion of DICOM files to BIDS format
+- **Multi-Vendor Support**: Supports various ASL sequences
+- **Extensible Architecture**: Easy to add new modalities and validators
+
+### User Interface
+- **Web-Based Interface**: Modern, responsive web application built with Next.js
+- **File Upload**: Folder selection for easy data upload
+- **Real-time Processing**: Immediate feedback on validation results
+- **PDF Export**: Generate downloadable PDF reports for inclusion in papers
+
+### API Integration
+- **RESTful API**: FastAPI-based backend for programmatic access
+- **Docker Support**: Containerized deployment for easy setup
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+
+
+## Supported Modalities
+
+Currently, the tool supports:
+
+- **ASL (Arterial Spin Labeling)**: Full support with comprehensive validation
+- **DSC (Dynamic Susceptibility Contrast)**: (in development)
+
+Planned modalities:
+- **DCE (Dynamic Contrast Enhanced)**
+- **Other perfusion techniques**
+
+## Validation Features
+
+The tool performs comprehensive validation including:
+
+- **Parameter Consistency**: Checks for variations across sessions
+- **Value Validation**: Ensures parameters meet predefined criteria
+- **Format Compliance**: Validates BIDS format requirements
+- **Missing Data Detection**: Identifies required parameters
+- **Warning Generation**: Highlights potential issues
+
+## Acknowledgements
+
+This project has been developed by [Ibrahim Abdelazim](https://www.ibrahim-abdelazim.de/) & [Hanliang Xu](https://hanliang-xu.github.io/#/) under the mentorship and supervision of Jan Petr, David Thomas, and the OSIPI TF 4.1 ASL Lexicon as part of Google Summer of Code 2024/2025 projects.
+
+## Citing ASL Methods Section Generator
+
+If you use the ASL Methods Section Generator in your research, please cite it as follows:
+
+```bibtex
+@misc{asl_methods_section_generator,
+  title = {ASL Methods Section Generator},
+  author = {Ibrahim Abdelazim, Hanliang Xu, Jan Petr, David Thomas},
+  year = {2025},
+  url = {https://asl-methods-section-generator.readthedocs.io/},
+  note = {Accessed: 2025-01-01}
+}
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](../package/LICENSE) file for details.
+
+---
+
+<Info>
+**Ready to get started?** Check out our [Quick Start Guide](./user-guide/quick-start) or explore the [API Documentation](./development/api-reference) for developers.
+</Info>

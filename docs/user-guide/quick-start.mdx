@@ -1,0 +1,228 @@
+---
+title: Quick Start Guide
+description: Learn how to use the ASL Methods Section Generator App in minutes
+---
+
+This guide will walk you through using the ASL Methods Section Generator to create standardized methods sections for your ASL research papers.
+
+## What You'll Learn
+
+By the end of this guide, you'll know how to:
+- Upload ASL data (BIDS or DICOM format)
+- Generate comprehensive validation reports
+- Create standardized methods sections
+- Export results as PDF reports
+
+## Prerequisites
+
+Before starting, ensure you have:
+- **ASL Data**: Either in BIDS format or DICOM files
+- **Web Browser**: Chrome, Firefox, Safari, or Edge
+- **Internet Connection**: For accessing the web application
+
+## Step-by-Step Guide
+<Steps>
+    <Step title="Prepare Your Data">
+
+#### Option A: BIDS Format (Recommended)
+Ensure your data follows the BIDS standard:
+```
+your_dataset/
+├── sub-01/
+│   ├── ses-01/
+│   │   ├── perf/
+│   │   │   ├── sub-01_ses-01_asl.json    # ASL parameters
+│   │   │   ├── sub-01_ses-01_asl.nii.gz  # ASL image data
+│   │   │   ├── sub-01_ses-01_m0scan.json # M0 parameters (optional)
+│   │   │   ├── sub-01_ses-01_m0scan.nii.gz # M0 image data (optional)
+│   │   │   └── sub-01_ses-01_asl.tsv     # Volume timing info
+│   │   └── anat/
+│   │       └── sub-01_ses-01_T1w.nii.gz  # Anatomical reference
+└── dataset_description.json
+```
+
+
+#### Option B: DICOM Files
+If you have DICOM files:
+- Organize them in a folder
+- The application will automatically convert them to BIDS format
+
+<Info>Please ensure that your DICOM series has more than 3 instances for the conversion.</Info>
+
+</Step>
+
+<Step title="Upload Your Data">
+
+1. **Choose Upload Method**:
+   - Click "Choose Folder" for BIDS data
+   - Or drag and drop files directly
+
+2. **Select Data Type**:
+   - Choose "BDIS" for BIDS format
+   - Choose "DICOM" for DICOM files
+
+3. **Select Modality**:
+   - Currently supports "ASL" (Arterial Spin Labeling)
+   - More modalities coming soon
+
+4. **Upload Files**:
+   - Select your data folder or files
+   - Wait for the upload to complete
+</Step>
+
+<Step title="Review the Results">
+
+After processing, you'll see several sections:
+
+#### Basic Report
+- **Parameter Summary**: Key ASL parameters extracted from your data
+- **Validation Status**: Overall validation results
+- **File Information**: Details about processed files
+
+#### Errors & Warnings
+- **Major Errors**: Critical issues that need attention
+- **Minor Errors**: Issues that should be reviewed
+- **Warnings**: Potential problems or inconsistencies
+
+#### Extended Report
+- **Detailed Analysis**: Comprehensive parameter breakdown
+- **Consistency Checks**: Cross-validation of parameters
+- **Recommendations**: Suggestions for improvement
+</Step>
+
+<Step title="Generate Methods Section">
+
+1. **Review Validation Results**:
+   - Address any major errors first
+   - Review warnings and minor errors
+   - Ensure all required parameters are present
+
+2. **Add Missing Parameters** (if needed):
+   - Click on missing parameters to add values
+   - Provide additional information when prompted
+
+3. **Generate Report**:
+   - Click "Generate Report" to create the final output
+   - Review the generated methods section
+
+</Step>
+
+<Step title="Export Results">
+
+1. **Download PDF Report**:
+   - Click "Download PDF" to save the report
+   - The PDF includes all validation results and the methods section
+
+2. **Copy Methods Section**:
+   - Copy the generated methods text
+   - Paste it into your research paper
+
+</Step>
+</Steps>
+## Understanding the Output
+
+### Validation Categories
+
+####  Valid Parameters
+- Parameters that meet all validation criteria
+- No action required
+
+#### Warnings
+- Parameters that may need attention
+- Review for potential issues
+- Examples: slight variations in timing parameters
+
+#### Minor Errors
+- Parameters that don't meet validation criteria
+- Should be reviewed and corrected
+- Examples: missing optional parameters
+
+#### Major Errors
+- Critical issues that must be addressed
+- May indicate data quality problems
+- Examples: missing required parameters, invalid values
+
+### Report Sections
+
+#### Basic Report
+```
+ASL was acquired on a 3T Siemens TrioTim scanner using multi-PLD FAIR PASL labeling and a 3D GRASE readout with the following parameters: TE = 11.92ms, 
+TR = 3500ms, flip angle 180 degrees, in-plane resolution 8x4mm^2, 18 slices with 6mm thickness, inversion time 300ms (1 repeat), 600ms (1 repeat), 900ms (1 repeat), 
+1200ms (1 repeat), 1500ms (1 repeat), 1800ms (1 repeat), 2100ms (1 repeat), 2400ms (1 repeat), 2700ms (1 repeat), 3000ms (1 repeat), labeling slab thickness 115.5mm, 
+with bolus saturation using Q2TIPS pulse applied from 700ms to 1600ms after the labeling, with background suppression with 2 pulses at 150ms and 200ms after the start 
+of labeling. In total, 10 label-control pairs were acquired. There is inconsistency in EchoTime between M0 and ASL scans. TR for M0 is 6000ms.
+```
+
+#### Extended Report
+```
+Detailed Parameter Analysis:
+ASL was acquired on a 3T Siemens TrioTim scanner using multi-PLD FAIR PASL labeling and a 3D GRASE readout with the following parameters: TE = 11.92ms, TR = 3500ms, 
+flip angle 180 degrees, in-plane resolution 8x4mm^2, 18 slices with 6mm thickness, inversion time 300ms (1 repeat), 600ms (1 repeat), 900ms (1 repeat), 1200ms (1 repeat), 
+1500ms (1 repeat), 1800ms (1 repeat), 2100ms (1 repeat), 2400ms (1 repeat), 2700ms (1 repeat), 3000ms (1 repeat), labeling slab thickness 115.5mm, with bolus saturation 
+using Q2TIPS pulse applied from 700ms to 1600ms after the labeling, with background suppression with 2 pulses at 150ms and 200ms after the start of labeling. In total, 
+10 label-control pairs were acquired. There is inconsistency in EchoTime between M0 and ASL scans. TR for M0 is 6000ms.
+```
+
+
+## Advanced Features
+
+### API Access
+For programmatic access:
+```python
+import requests
+
+# Upload files
+files = {
+    'files': open('asl.json', 'rb'),
+    'nifti_file': open('asl.nii.gz', 'rb')
+}
+
+response = requests.post('http://localhost:8000/api/report/process', files=files)
+result = response.json()
+```
+
+### Use the package directly
+
+```python
+from pyaslreport import generate_report
+from pyaslreport.enums import ModalityTypeValues
+
+data  = {
+    "modality": ModalityTypeValues.ASL,
+    "files": [
+        "/sub-Sub1_asl.json",
+        "/sub-Sub1_aslcontext.tsv",
+        "/sub-Sub1_m0scan.json"
+    ],
+    "nifti_file": "/sub-Sub1_asl.nii.gz",
+    "dcm_files": []
+}
+
+generate_report(data)
+```
+
+<Info> 
+Notes
+1. **Review All Sections**: Don't skip warnings or minor errors
+2. **Address Issues**: Fix problems before finalizing
+3. **Customize Output**: Modify generated text as needed
+4. **Save Results**: Keep copies of generated reports
+</Info>
+
+## Getting Help
+
+### Documentation
+- **User Guide**: Detailed usage instructions
+- **API Reference**: Programmatic access documentation
+- **Troubleshooting**: Common issues and solutions
+
+### Support
+- **Community Forum**: Ask questions and share experiences
+- **Issue Tracker**: Report bugs and request features
+- **Email Support**: Direct contact for complex issues
+
+---
+
+<Info>
+**Ready to Start?** Download some [sample data](./sample-data) and try the application with your own ASL datasets!
+</Info> 
