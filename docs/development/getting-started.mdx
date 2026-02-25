@@ -1,0 +1,271 @@
+---
+title: Getting Started
+description: A comprehensive guide to set up and use the ASL Methods Section Generator
+---
+
+
+This guide will help you set up and run the ASL Methods Section Generator project on your local machine. The project consists of three main components: a Python package, a FastAPI backend, and a Next.js frontend.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+### Required Software
+- **Docker & Docker Compose** (Recommended for easy setup)
+  - Docker Desktop: [Download here](https://www.docker.com/products/docker-desktop/)
+  - Docker Compose: Usually included with Docker Desktop
+
+### Alternative: Manual Setup
+If you prefer to run components individually, you'll need:
+- **Python 3.11+** with pip
+- **Node.js 18+** with yarn
+- **Git** for version control
+
+## Quick Start with Docker (Recommended)
+
+The easiest way to get started is using Docker Compose, which will set up all components automatically.
+
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd ASL-Methods-Generator
+```
+
+### 2. Start the Application
+```bash
+docker-compose up --build --watch
+```
+
+This command will:
+- Build the Docker images for both frontend and backend
+- Start the containers
+- Make the application available at:
+  - Frontend: http://localhost:3000
+  - Backend API: http://localhost:8000
+  - API Documentation: http://localhost:8000/docs
+- Enable changes in the containers
+
+### 3. Access the Application
+Open your web browser and navigate to [http://localhost:3000](http://localhost:3000) to access the web interface.
+
+## Manual Setup (Advanced)
+
+If you prefer to run components individually or contribute to development, follow these steps:
+
+### 1. Python Package Setup
+
+<Info> This step is only requried if you are going to do changes to the package code </Info>
+
+```bash
+# Navigate to the package directory
+cd package
+
+# Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install the package in development mode
+pip install -e .
+```
+
+### 2. Backend Setup
+
+```bash
+# Navigate to the backend directory
+cd apps/backend
+
+# Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the backend server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### 3. Frontend Setup
+
+```bash
+# Navigate to the frontend directory
+cd apps/frontend
+
+# Install dependencies
+yarn install
+
+# Start the development server
+yarn dev
+```
+
+## 📁 Project Structure Overview
+
+```
+ASL-Methods-Generator/
+├── package/                    # Python package (pyaslreport)
+│   ├── src/pyaslreport/       # Core package source code
+│   ├── pyproject.toml         # Package configuration
+│   └── requirements.txt       # Package dependencies
+├── apps/
+│   ├── frontend/              # Next.js web application
+│   │   ├── src/               # Source code
+│   │   ├── package.json       # Frontend dependencies
+│   │   └── Dockerfile         # Frontend container
+│   └── backend/               # FastAPI backend
+│       ├── app/               # Backend source code
+│       ├── requirements.txt   # Backend dependencies
+│       └── Dockerfile         # Backend container
+├── docs/                      # Documentation
+└── docker-compose.yml         # Container orchestration
+```
+
+## Testing Your Setup
+
+### 1. Test the Backend API
+```bash
+# Test the API health endpoint
+curl http://localhost:8000/
+
+# Expected response:
+{
+  "name": "ASL Methods Parameter Generator API Service",
+  "version": "0.0.1",
+  "description": "This service provides an API for generating ASL methods parameters based on user input.",
+  "organization": "The ISMRM Open Science Initiative for Perfusion Imaging",
+  "authors": [
+    {"Ibrahim Abdelazim": "ibrahim.abdelazim@fau.de"},
+    {"Hanliang Xu": "hxu110@jh.edu"}
+  ],
+  "supervisors": [
+    "Jan Petr",
+    "David Thomas"
+  ],
+  "Specs": {
+    "Programming Language": "Python",
+    "Framework": "FastAPI",
+    "Operating System": "OS Independent"
+  },
+  "license": "MIT"
+}
+```
+
+### 2. Test the Frontend
+- Open http://localhost:3000 in your browser
+- You should see the main application interface
+- Try uploading a sample file to test the functionality
+
+### 3. Test the Python Package
+```python
+# In a Python environment with the package installed
+from pyaslreport import generate_report
+
+# Test with sample data
+data = {
+    "modality": "asl",
+    "files": ["path/to/sample.json"],
+    "nifti_file": "path/to/sample.nii"
+}
+
+# This will raise an error if files don't exist, but confirms the package is working
+try:
+    result = generate_report(data)
+    print("Package is working correctly!")
+except FileNotFoundError:
+    print("Package is working (files not found as expected)")
+```
+
+## Sample Data
+
+To test the application, you can use sample ASL datasets:
+
+### Download Sample Data
+- **Sample ASL BIDS Data**: [Download](/user-guide/sample-data)
+
+### Expected File Structure
+```
+sample_dataset/
+├── sub-01/
+│   ├── ses-01/
+│   │   ├── perf/
+│   │   │   ├── sub-01_ses-01_asl.json
+│   │   │   ├── sub-01_ses-01_asl.nii.gz
+│   │   │   ├── sub-01_ses-01_m0scan.json
+│   │   │   ├── sub-01_ses-01_m0scan.nii.gz
+│   │   │   └── sub-01_ses-01_asl.tsv
+│   │   └── anat/
+│   │       └── sub-01_ses-01_T1w.nii.gz
+└── dataset_description.json
+```
+
+
+
+## Development Workflow
+
+### 1. Making Changes
+```bash
+# The application supports hot reloading
+# Changes to frontend code will automatically refresh
+# Changes to backend code will restart the server
+# Changes to the Python package require restarting the backend
+```
+
+### 2. Running Tests
+```bash
+# Backend tests
+cd apps/backend
+python -m pytest
+
+# Frontend tests
+cd apps/frontend
+yarn test
+
+# Package tests
+cd package
+python -m pytest
+```
+
+### 3. Code Quality
+```bash
+# Frontend linting
+cd apps/frontend
+yarn lint
+
+# Backend formatting
+cd apps/backend
+black .
+isort .
+```
+
+## Next Steps
+
+Now that you have the application running, you can:
+
+1. **Explore the Web Interface**: Upload sample data and generate reports
+2. **Read the Documentation**: Check out the [User Guide](./user-guide/) for detailed usage instructions
+3. **Explore the API**: Visit http://localhost:8000/docs for interactive API documentation
+4. **Contribute**: Check out the [Contributing Guide](./contributing) for development guidelines
+
+## Getting Help
+
+If you encounter issues:
+
+1. **Check the Troubleshooting section** above
+2. **Review the logs**: Use `docker-compose logs` for detailed error information
+3. **Search existing issues**: Check the project's issue tracker
+4. **Create a new issue**: Provide detailed information about your setup and the problem
+
+---
+
+<Info>
+**Need Help?** If you're still having trouble, check out our [Troubleshooting Guide](./troubleshooting) or [join our community discussions](https://github.com/your-repo/discussions).
+</Info>

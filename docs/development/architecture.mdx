@@ -1,0 +1,189 @@
+---
+title: Architecture
+description: Detailed overview of the ASL Methods Section Generator architecture
+---
+
+The ASL Methods Section Generator follows a modern, modular architecture designed for scalability, maintainability, and extensibility. The system is composed of three main components that work together to provide a comprehensive ASL data processing and report generation solution.
+
+## High-Level Architecture
+
+The system architecture consists of three primary layers:
+
+<Image zoom theme="dark"  src="/assets/layers-dr.png" alt="System Main Layers" />
+<Image zoom theme="light" src="/assets/layers-it.png" alt="System Main Layers" />
+
+
+## 🔧 Component Details
+
+### 1. Frontend Application (Next.js)
+
+**Location**: `apps/frontend/`
+
+**Technology Stack**:
+- **Framework**: Next.js 15.3.3 with React 19
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **State Management**: React Context API
+- **HTTP Client**: Axios for API communication
+- **Build Tool**: Turbopack for development
+
+**Key Components**:
+- **File Upload Interface**: Folder selection
+- **Report Display**: Interactive report viewing with error/warning highlighting
+- **Navigation**: Sidebar navigation with theme support
+- **PDF Export**: Client-side PDF generation capabilities
+
+**Architecture Patterns**:
+- Component-based architecture with reusable UI components
+- Context-based state management for global application state
+- Service layer for API communication
+- Utility functions for file processing and validation
+
+### 2. Backend API (FastAPI)
+
+**Location**: `apps/backend/`
+
+**Technology Stack**:
+- **Framework**: FastAPI with Python 3.11
+- **ASGI Server**: Uvicorn with auto-reload
+- **File Processing**: Python multipart for file uploads
+- **PDF Generation**: WeasyPrint for HTML to PDF conversion
+
+**API Endpoints**:
+```python
+POST /api/report/process                # Process uploaded files
+POST /api/report/missing-parameters     # Handle missing parameters
+POST /api/report/report-pdf             # Generate PDF reports
+GET  /                                  # API information
+```
+
+**Key Features**:
+- **File Upload Handling**: Multipart form data processing
+- **Error Handling**: Comprehensive error responses with HTTP status codes
+- **File Storage**: Temporary file storage for processing
+- **PDF Generation**: Server-side PDF report generation
+
+### 3. Core Package (pyaslreport)
+
+**Location**: `package/src/pyaslreport/`
+
+**Technology Stack**:
+- **Core Dependencies**: NiBabel, PyDICOM
+- **DICOM Processing**: dicom2nifti for format conversion
+- **Validation**: Custom validation schemas and rules
+- **Report Generation**: Template-based report creation
+
+<Image zoom theme="dark"  src="/assets/arch.png" alt="System Architecture Diagram" />
+<Image zoom theme="light" src="/assets/arch-lt.png" alt="System Architecture Diagram" />
+
+**Architecture Components**:
+
+#### Modality System
+
+This handles the report generation for modalities (ASL, DSC, ..)
+Whenever you are implementing a new modality you have to follow the same stucture.
+
+```
+modalities/
+├── asl/                   # ASL-specific processing
+│   ├── processor.py       # Main ASL processor
+│   ├── validator.py       # ASL validation logic
+│   ├── report_generator.py # ASL report templates
+│   └── validators/        # Specific validators
+├── testdsc/               # DSC modality (in development)
+└── registry.py            # Modality registration system
+```
+
+#### Sequence Management
+ 
+This Handles the extraction of BDIS metadata (e.g. asl.json) from DICOM for vendors and organization implementation of modalities
+
+```
+sequences/
+├── factory.py             # Sequence factory pattern
+├── ge/                    # GE vendor sequences
+│   ├── asl/               # GE ASL sequences
+│   └── dsc/               # GE DSC sequences
+├── siemens/               # Siemens vendor sequences
+└── philips/               # Philips vendor sequences
+```
+
+#### Input/Output System
+```
+io/
+├── readers/               # File reading utilities
+│   ├── file_reader.py     # Generic file reader
+│   ├── nifti_reader.py    # NIfTI file processing
+│   └── yaml_reader.py     # YAML configuration reading
+└── writers/               # Output generation
+    ├── json_writer.py     # JSON report output
+    ├── report_writer.py   # Formatted report generation
+    └── tsv_writer.py      # TSV file output
+```
+
+## Data Flow
+
+### 1. File Upload Process
+```
+User Upload → Frontend Validation → Backend API → File Storage → Core Processing
+```
+
+### 2. Report Generation Process
+```
+Core Processing → Validation → Report Generation → API Response →  Display
+```
+
+### 3. PDF Export Process
+```
+Report Data → HTML Template → WeasyPrint → PDF File → Download
+```
+
+## Scalability Features
+
+### 1. Horizontal Scaling
+- Stateless API design
+- Containerized deployment
+- Load balancer ready
+
+### 2. Modular Architecture
+- Independent component development
+- Plugin-based modality system
+- Extensible validation framework
+
+### 3. Performance Optimization
+- Async file processing
+- Efficient memory usage
+- Caching strategies (planned)
+
+## Configuration Management
+
+### 1. Environment Variables
+```bash
+# Backend Configuration
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
+```
+
+## Deployment Architecture
+
+### Development Workflow
+1. **Local Development**: Docker Compose with volume mounting
+2. **Testing**: Automated tests for each component
+3. **Staging**: Containerized deployment
+4. **Production**: Orchestrated container deployment
+
+## Future Architecture Considerations
+
+### 1. Database Integration
+- User management system
+- Report history storage
+- Configuration persistence
+
+### 2. Advanced Features
+- Share Reports
+- Version control for reports
+- Integration with research platforms
+
+---
+
+<Info>
+**Architecture Decisions**: The current architecture prioritizes simplicity and maintainability while providing a solid foundation for future enhancements. Each component is designed to be independently deployable and testable.
+</Info>

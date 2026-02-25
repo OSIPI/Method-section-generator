@@ -1,0 +1,18 @@
+param_units:
+  # Time-related parameters (milliseconds)
+  EchoTime: s
+  RepetitionTimePreparation: s
+  RepetitionTime: s
+  LabelingDuration: s
+  BolusCutOffDelayTime: s
+  BackgroundSuppressionPulseTime: s
+  PostLabelingDelay: s
+
+  # Dimensionless or unknown units
+  ArterialSpinLabelingType: '-'
+  TotalAcquiredPairs: '-'
+  M0Type: '-'
+
+  #
+  FlipAngle: 'Deg'
+  MagneticFieldStrength: 'Tesla'

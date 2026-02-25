@@ -1,0 +1,91 @@
+{
+  "name": "ASL Parameter Generator Documentation",
+  "description": "Documentation for the ASL Parameter Generator, a tool for generating parameters for ASL MRI.",
+  "favicon": "/assets/favicon.ico",
+  "logo": {
+    "light": "/assets/logo_black.png",
+    "dark": "/assets/logo_white.png"
+  },
+  "theme": {
+    "defaultTheme": "dark",
+    "primary": "#0D47A1",
+    "primaryDark": "#49addb",
+    "primaryLight": "##19305c"
+  },
+  "social": {
+    "x": "@OSIPI_ISMRM",
+    "github": "OSIPI"
+  },
+  "sidebar": [
+  {
+    "group": "Introduction",
+    "pages": [
+      {
+        "title": "ASL Parameter Generator",
+        "href": "/",
+        "icon": "rocket"
+      }
+    ]
+  },
+  {
+    "group": "User Guide",
+    "pages": [
+      {
+        "title": "Quick Start",
+        "href": "/user-guide/quick-start",
+        "icon": "rocket"
+      },
+      {
+        "title": "UI",
+        "href": "/user-guide/ui",
+        "icon": "tv"
+      }
+    ]
+  },
+  {
+    "group": "Development",
+    "pages": [
+      {
+        "title": "Getting Started",
+        "href": "/development/getting-started",
+        "icon": "arrow-up-right-from-square"
+      },
+      {
+        "title": "Architecture",
+        "href": "/development/architecture",
+        "icon": "sitemap"
+      },
+      {
+        "title": "Folder Structure",
+        "href": "/development/folder-structure",
+        "icon": "folder"
+      },
+      {
+        "title": "API Reference",
+        "href": "/development/api-reference",
+        "icon": "code"
+      },
+      {
+        "title": "Contributing",
+        "href": "/development/contributing",
+        "icon": "arrow-up-right-from-square"
+      },
+      {
+        "title": "Sample data",
+        "href": "/user-guide/sample-data",
+        "icon": "database"
+      }
+    ]
+  },
+  {
+    "group": "Next Steps",
+    "pages": [
+      {
+        "title": "Next Steps",
+        "href": "/next-steps",
+        "icon": "arrow-up-right-from-square"
+      }
+    ]
+  }
+]
+}
