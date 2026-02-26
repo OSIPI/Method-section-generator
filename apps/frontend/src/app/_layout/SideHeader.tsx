@@ -68,7 +68,7 @@ const SiteHeader = () => {
                     <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
 
                         <a
-                            href="https://docs.page/1brahimmohamed/ASL-Parameter-Generator"
+                            href="https://docs.page/osipi/Method-section-generator"
                             rel="noopener noreferrer"
                             target="_blank"
                             className="dark:text-foreground"
@@ -82,7 +82,7 @@ const SiteHeader = () => {
                     <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
 
                         <a
-                            href="https://github.com/1brahimmohamed/ASL-Parameter-Generator"
+                            href="https://github.com/OSIPI/Method-section-generator"
                             rel="noopener noreferrer"
                             target="_blank"
                             className="dark:text-foreground"

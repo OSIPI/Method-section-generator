@@ -51,12 +51,12 @@ const NavData: {
     navSecondary: [
         {
             title: "Documentation",
-            url: "https://docs.page/1brahimmohamed/ASL-Parameter-Generator",
+            url: "https://docs.page/osipi/Method-section-generator",
             icon: IconFileTypeDoc,
         },
         {
             title: "Github Repository",
-            url: "https://github.com/1brahimmohamed/ASL-Parameter-Generator",
+            url: "https://github.com/OSIPI/Method-section-generator",
             icon: IconBrandGithub,
         },
         {
