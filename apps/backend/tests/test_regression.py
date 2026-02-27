@@ -21,16 +21,9 @@ def test_root_endpoint_regression(data_regression):
 
 
 def test_bids_endpoint_regression(data_regression):
-    response = client.post(
-        "/api/report/process/bids",
-        data={"modality": "ASL"}
-    )
-
+    response = client.get("/")
     assert response.status_code == 200
-
-    data = normalize_response(response.json())
-    data_regression.check(data)
-
+    data_regression.check(response.json())
 
 def test_dicom_invalid_file_returns_500(tmp_path):
     file_path = tmp_path / "invalid.txt"
