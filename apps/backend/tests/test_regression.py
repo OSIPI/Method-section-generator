@@ -20,18 +20,13 @@ def test_root_endpoint_regression(data_regression):
     data_regression.check(data)
 
 
-def test_bids_endpoint_regression(data_regression):
-    response = client.get("/")
-    assert response.status_code == 200
-    data_regression.check(response.json())
-
 def test_dicom_invalid_file_returns_500(tmp_path):
     file_path = tmp_path / "invalid.txt"
     file_path.write_text("not a dicom")
 
     with open(file_path, "rb") as f:
         response = client.post(
-            "/api/report/process/dicom",  # fixed /api prefix
+            "/api/report/process/dicom",
             files={"dcm_files": ("invalid.txt", f, "text/plain")},
             data={"modality": "ASL"},
         )
