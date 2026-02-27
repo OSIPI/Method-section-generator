@@ -24,15 +24,15 @@ def test_get_bids_metadata_no_sequence():
     data = {"modality": "asl", "dicom_dir": "/fake/dir"}
     fake_header = MagicMock()
     with patch("pyaslreport.main.get_dicom_header", return_value=fake_header), \
-         patch("pyaslreport.main.get_sequence", return_value=None):
+         patch("pyaslreport.main.get_sequence", side_effect=ValueError("No ASL sequence class found")):
         with pytest.raises(ValueError) as exc:
             get_bids_metadata(data)
-        assert "No matching sequence found" in str(exc.value)
+        assert "No ASL sequence class found" in str(exc.value)
 
 def test_get_bids_metadata_invalid_modality():
     data = {"modality": None, "dicom_dir": "/fake/dir"}
     fake_header = MagicMock()
     with patch("pyaslreport.main.get_dicom_header", return_value=fake_header), \
-         patch("pyaslreport.main.get_sequence", return_value=None):
+         patch("pyaslreport.main.get_sequence", side_effect=ValueError("Unsupported modality")):
         with pytest.raises(ValueError):
             get_bids_metadata(data)
