@@ -242,7 +242,14 @@ class ASLProcessor(BaseProcessor):
         
         for old_key, new_key in field_mappings.items():
             if old_key in session:
-                session[new_key] = session[old_key]
+                if new_key in session and session[new_key] != session[old_key]:
+                    import logging
+                    logging.warning(
+                        f"Field conflict: '{old_key}' ({session[old_key]}) maps to '{new_key}' "
+                        f"which already has value {session[new_key]}. Retaining existing '{new_key}'."
+                    )
+                else:
+                    session[new_key] = session[old_key]
                 del session[old_key]
 
         # Handle NumRFBlocks special case
