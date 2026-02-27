@@ -1,4 +1,4 @@
-from pyaslreport.enums.modaliy_enum import ModalityTypeValues
+from pyaslreport.enums.modality_enum import ModalityTypeValues
 from pyaslreport.sequences.ge.asl import GEBasicSinglePLD, GEMultiPLD
 from pyaslreport.sequences.ge.dsc import GEDSCSequence
 from pyaslreport.sequences.siemens.asl import SiemensBasicSinglePLD
