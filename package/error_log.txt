@@ -1,0 +1,75 @@
+Obtaining file:///C:/Users/Lenovo/Method-section-generator/package
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Collecting PyYAML~=6.0.2 (from pyaslreport==0.0.3)
+  Obtaining dependency information for PyYAML~=6.0.2 from https://files.pythonhosted.org/packages/74/93/7baea19427dcfbe1e5a372d81473250b379f04b1bd3c4c5ff825e2327202/pyyaml-6.0.3-cp312-cp312-win32.whl.metadata
+  Using cached pyyaml-6.0.3-cp312-cp312-win32.whl.metadata (2.4 kB)
+Collecting numpy~=2.2.6 (from pyaslreport==0.0.3)
+  Obtaining dependency information for numpy~=2.2.6 from https://files.pythonhosted.org/packages/57/0a/72d5a3527c5ebffcd47bde9162c39fae1f90138c961e5296491ce778e682/numpy-2.2.6-cp312-cp312-win32.whl.metadata
+  Using cached numpy-2.2.6-cp312-cp312-win32.whl.metadata (60 kB)
+Collecting nibabel~=5.3.2 (from pyaslreport==0.0.3)
+  Obtaining dependency information for nibabel~=5.3.2 from https://files.pythonhosted.org/packages/b8/f5/7f6aa3bbff013c0bf993129cbb2b1505790091f812accbe85cf001514737/nibabel-5.3.3-py3-none-any.whl.metadata
+  Using cached nibabel-5.3.3-py3-none-any.whl.metadata (9.1 kB)
+Collecting pydicom~=3.0.1 (from pyaslreport==0.0.3)
+  Obtaining dependency information for pydicom~=3.0.1 from https://files.pythonhosted.org/packages/27/a6/98651e752a49f341aa99aa3f6c8ba361728dfc064242884355419df63669/pydicom-3.0.1-py3-none-any.whl.metadata
+  Using cached pydicom-3.0.1-py3-none-any.whl.metadata (9.4 kB)
+Collecting dicom2nifti~=2.6.2 (from pyaslreport==0.0.3)
+  Obtaining dependency information for dicom2nifti~=2.6.2 from https://files.pythonhosted.org/packages/ab/59/598237cb4a5b1fae3515ad8b402ae815a5551e236e530ba11b7a17b2c036/dicom2nifti-2.6.2-py3-none-any.whl.metadata
+  Using cached dicom2nifti-2.6.2-py3-none-any.whl.metadata (1.5 kB)
+Collecting scipy (from dicom2nifti~=2.6.2->pyaslreport==0.0.3)
+  Using cached scipy-1.17.1.tar.gz (30.6 MB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Installing backend dependencies: started
+  Installing backend dependencies: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  Preparing metadata (pyproject.toml) did not run successfully.
+  exit code: 1
+  
+  [21 lines of output]
+  + meson setup C:\Users\Lenovo\AppData\Local\Temp\pip-install-pdslx5nq\scipy_37e282a689d44d52a49fdbc0e67acf30 C:\Users\Lenovo\AppData\Local\Temp\pip-install-pdslx5nq\scipy_37e282a689d44d52a49fdbc0e67acf30\.mesonpy-36syoiyu -Dbuildtype=release -Db_ndebug=if-release -Db_vscrt=md --native-file=C:\Users\Lenovo\AppData\Local\Temp\pip-install-pdslx5nq\scipy_37e282a689d44d52a49fdbc0e67acf30\.mesonpy-36syoiyu\meson-python-native-file.ini
+  The Meson build system
+  Version: 1.10.1
+  Source dir: C:\Users\Lenovo\AppData\Local\Temp\pip-install-pdslx5nq\scipy_37e282a689d44d52a49fdbc0e67acf30
+  Build dir: C:\Users\Lenovo\AppData\Local\Temp\pip-install-pdslx5nq\scipy_37e282a689d44d52a49fdbc0e67acf30\.mesonpy-36syoiyu
+  Build type: native build
+  WARNING: Failed to activate VS environment: Could not find C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe
+  Project name: scipy
+  Project version: 1.17.1
+  
+  ..\meson.build:1:0: ERROR: Unknown compiler(s): [['icl'], ['cl'], ['cc'], ['gcc'], ['clang'], ['clang-cl'], ['pgcc']]
+  The following exception(s) were encountered:
+  Running `icl ""` gave "[WinError 2] The system cannot find the file specified"
+  Running `cl /?` gave "[WinError 2] The system cannot find the file specified"
+  Running `cc --version` gave "[WinError 2] The system cannot find the file specified"
+  Running `gcc --version` gave "[WinError 2] The system cannot find the file specified"
+  Running `clang --version` gave "[WinError 2] The system cannot find the file specified"
+  Running `clang-cl /?` gave "[WinError 2] The system cannot find the file specified"
+  Running `pgcc --version` gave "[WinError 2] The system cannot find the file specified"
+  
+  A full log can be found at C:\Users\Lenovo\AppData\Local\Temp\pip-install-pdslx5nq\scipy_37e282a689d44d52a49fdbc0e67acf30\.mesonpy-36syoiyu\meson-logs\meson-log.txt
+  [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: metadata-generation-failed
+
+Encountered error while generating package metadata.
+
+See above for output.
+
+note: This is an issue with the package mentioned above, not pip.
+hint: See above for details.
+
+[notice] A new release of pip is available: 23.2.1 -> 26.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
