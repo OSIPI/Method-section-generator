@@ -35,4 +35,4 @@ def test_get_bids_metadata_invalid_modality():
     with patch("pyaslreport.main.get_dicom_header", return_value=fake_header), \
          patch("pyaslreport.main.get_sequence", return_value=None):
         with pytest.raises(ValueError):
-            get_bids_metadata(data)
+            get_bids_metadata(data)"# PR placeholder commit" 
