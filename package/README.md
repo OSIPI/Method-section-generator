@@ -16,15 +16,14 @@ A Python package for generating methods sections and reports for ASL (Arterial S
 
 ### Prerequisites
 
-- Python 3.7 or higher
+- Python 3.8 or higher
 - pip
 
-### Install from Source
+### Clone the Repository
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd ASL\ Generator/package
+git clone https://github.com/OSIPI/Method-section-generator.git
+cd Method-section-generator/package
 
 # Install in development mode
 pip install -e .
