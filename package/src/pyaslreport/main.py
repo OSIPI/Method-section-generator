@@ -40,6 +40,8 @@ def get_bids_metadata(data):
 def get_dicom_header(dicom_dir: str):
     """
     Extracts the DICOM header from the provided DICOM files.
+    Optimized to return immediately upon finding the first valid DICOM file, preventing unnecessary O(N) disk I/O on large medical datasets.
+    
     :param dicom_dir: Directory containing DICOM files.
     :return: DICOM header from the first valid DICOM file found.
     """
@@ -47,23 +49,16 @@ def get_dicom_header(dicom_dir: str):
     all_files = [f for f in os.listdir(dicom_dir) if os.path.isfile(os.path.join(dicom_dir, f))]
     
     # Try to find DICOM files by attempting to read them with pydicom
-    dcm_files = []
     for file in all_files:
         file_path = os.path.join(dicom_dir, file)
         try:
-            # Try to read the file as DICOM
-            pydicom.dcmread(file_path, stop_before_pixels=True)
-            dcm_files.append(file)
+            # Try to read the file as DICOM and return immediately if successful
+            dcm_header = pydicom.dcmread(file_path, stop_before_pixels=True)
+            log.info(f"Successfully extracted DICOM header from {file}")
+            return dcm_header
         except (InvalidDicomError, OSError, PermissionError):
             # File is not a valid DICOM file or cannot be read
             continue
-
-    log.info(f"Found {len(dcm_files)} DICOM files in {dicom_dir}")
-
-    if not dcm_files:
-        raise ValueError(f"No DICOM files found in directory: {dicom_dir}")
     
-    # Read the first valid DICOM file
-    dcm_header = pydicom.dcmread(os.path.join(dicom_dir, dcm_files[0]))
-    
-    return dcm_header
+    log.error(f"No valid DICOM files found in directory: {dicom_dir}")
+    raise ValueError(f"No DICOM files found in directory: {dicom_dir}")
