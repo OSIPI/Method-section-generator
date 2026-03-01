@@ -1,0 +1,43 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "apps/backend/**"
+      - "package/**"
+  pull_request:
+    paths:
+      - "apps/backend/**"
+      - "package/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          cd apps/backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-regressions httpx pytest-cov
+
+      - name: Install package (editable)
+        run: |
+          cd package
+          pip install -e .
+
+      - name: Run tests with coverage
+        run: |
+          cd apps/backend
+          pytest -v --cov=app --cov-report=term-missing --cov-report=xml
