@@ -30,14 +30,15 @@ jobs:
           cd apps/backend
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-regressions httpx
+          pip install pytest pytest-regressions httpx pytest-cov
 
       - name: Install package (editable)
         run: |
           cd package
           pip install -e .
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
           cd apps/backend
-          pytest -v
+          # So this command generates terminal report with missing lines AND an XML report for future Codecov integration
+          pytest -v --cov=app --cov-report=term-missing --cov-report=xml
