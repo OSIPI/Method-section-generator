@@ -40,5 +40,4 @@ jobs:
       - name: Run tests with coverage
         run: |
           cd apps/backend
-          # So this command generates terminal report with missing lines AND an XML report for future Codecov integration
           pytest -v --cov=app --cov-report=term-missing --cov-report=xml
