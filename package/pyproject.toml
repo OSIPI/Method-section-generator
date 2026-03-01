@@ -13,6 +13,20 @@ dependencies = [
     "pydicom~=3.0.1",
     "dicom2nifti~=2.6.2",
 ]
+[project.optional-dependencies]
+backend = [
+    "fastapi",
+    "uvicorn",
+    "httpx"
+]
+
+pdf = [
+    "weasyprint"
+]
+
+dev = [
+    "pytest"
+]
 
 [build-system]
 requires = ["setuptools", "wheel"]
