@@ -30,6 +30,11 @@ class BaseSequence(ABC):
         """Extract and convert DICOM metadata to BIDS fields."""
         pass
 
+    @abstractmethod
+    def generate_asl_context(self, nifti_path: str = None) -> list:
+        """Generate the ASL context array."""
+        pass
+
     def _extract_common_metadata(self) -> dict:
         """Extract and convert common DICOM metadata fields to BIDS fields, including ms->s conversion where needed."""
         dataset = self.dicom_header
