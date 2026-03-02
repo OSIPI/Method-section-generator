@@ -28,8 +28,16 @@ async def get_report_bids(
     """
     Receives form data and two files: a NIfTI file and a DICOM file.
     """
+    try:
+        parsed_modality = ModalityTypeValues(modality) if modality else ModalityTypeValues.ASL
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid modality '{modality}'. Accepted values: {[m.value for m in ModalityTypeValues]}"
+        )
+
     data = {
-        "modality": ModalityTypeValues(modality) if modality else ModalityTypeValues.ASL,
+        "modality": parsed_modality,
         "files": [],
         "nifti_file": None,
         "dcm_files": []
@@ -52,6 +60,9 @@ async def get_report_bids(
             file_path = await save_upload(file, base_dir=f"uploads/{report_id}/dicom")
             data["dcm_files"].append(file_path)
 
+    if not data["files"] and not data["dcm_files"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No BIDS or DICOM files provided")
+
     try: 
         report = generate_report(data)
         await remove_dir(f"uploads/{report_id}")
@@ -66,6 +77,15 @@ async def get_report_dicom(
         modality: Optional[str] = Form(None),
         dcm_files: Optional[List[UploadFile]] = File(None),
 ):
+    # Validate modality first
+    try:
+        parsed_modality = ModalityTypeValues(modality) if modality else ModalityTypeValues.ASL
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid modality '{modality}'. Accepted values: {[m.value for m in ModalityTypeValues]}"
+        )
+
     if not dcm_files:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No DICOM files provided")
 
@@ -76,7 +96,7 @@ async def get_report_dicom(
     print(base_dir)
 
     data = {
-        "modality": ModalityTypeValues(modality) if modality else ModalityTypeValues.ASL,
+        "modality": parsed_modality,
         "dicom_dir": f"{base_dir}/dicom"
     }
 
