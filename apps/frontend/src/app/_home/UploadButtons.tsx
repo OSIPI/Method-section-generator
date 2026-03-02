@@ -88,7 +88,7 @@ const UploadButtons = () => {
           <Button
             type="button"
             className={cn(
-              "rounded-l-md rounded-r-none border border-input cursor-pointer",
+              "rounded-l-md rounded-r-none border border-input cursor-pointer z-10",
               activeModalityTypeOption === UploadModalityType.ASL
                 ? "bg-primary text-primary-foreground"
                 : "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
@@ -100,7 +100,19 @@ const UploadButtons = () => {
           <Button
             type="button"
             className={cn(
-              "rounded-r-md rounded-l-none border-t border-b border-r border-input -ml-px cursor-pointer",
+              "rounded-none border-t border-b border-r border-input -ml-px cursor-pointer z-10",
+              activeModalityTypeOption === UploadModalityType.DSC
+                ? "bg-primary text-primary-foreground"
+                : "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+            onClick={() => setActiveModalityTypeOption(UploadModalityType.DSC)}
+          >
+            DSC
+          </Button>
+          <Button
+            type="button"
+            className={cn(
+              "rounded-r-md rounded-l-none border-t border-b border-r border-input -ml-px cursor-pointer z-10",
               activeModalityTypeOption === UploadModalityType.DCE
                 ? "bg-primary text-primary-foreground"
                 : "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
