@@ -9,7 +9,10 @@ from .data import data
 from pyaslreport import generate_report, get_bids_metadata
 from pyaslreport.enums import ModalityTypeValues
 from fastapi.responses import FileResponse
-from weasyprint import HTML
+try:
+    from weasyprint import HTML
+except Exception:
+    HTML = None
 from app.utils.report_template import render_report_html
 from app.utils.lib import default_serializer, save_upload, remove_dir
 
@@ -119,15 +122,12 @@ async def get_report_dicom(
 
     return report
 
-
 @report_router.post("/report-pdf")
 async def download_pdf(report_data: dict):
-    print("--------------------------------")
-    print(report_data["report_data"]["asl_parameters"])
-    print("--------------------------------")
     html_content = render_report_html(report_data["report_data"])
+    if HTML is None:
+        return {"error": "PDF generation not available (WeasyPrint not installed)"}
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         HTML(string=html_content).write_pdf(tmp.name)
         tmp_path = tmp.name
     return FileResponse(tmp_path, media_type="application/pdf", filename="report.pdf")
-
