@@ -12,7 +12,7 @@ class DICOM2NiFTIConverter:
     """
 
     @staticmethod
-    def convert(dcm_files, nifti_file=None, converted_files_location="/tmp/upload"):
+    def convert(dcm_files, nifti_file=None, converted_files_location=os.path.join(tempfile.gettempdir(), "upload")):
 
         """
         Convert DICOM files to NIfTI format.
