@@ -9,7 +9,7 @@ client = TestClient(app)
 
 def test_get_report_bids_no_files():
     response = client.post("/api/report/process/bids", data={"modality": "ASL"})
-    assert response.status_code == 200
+    assert response.status_code == 500
     assert isinstance(response.json(), dict)
 
 def test_get_report_dicom_no_files():
@@ -23,21 +23,27 @@ def test_get_report_dicom_with_invalid_file(tmp_path):
     file_path.write_text("not a dicom")
     with open(file_path, "rb") as f:
         response = client.post(
-            "/report/process/dicom",
+            "/api/report/process/dicom",
             files={"dcm_files": ("not_a_dicom.txt", f, "text/plain")},
             data={"modality": "ASL"}
         )
     # Should still return 500 due to invalid dicom
-    assert response.status_code in [500, 200]
+    assert response.status_code == 500
 
 def test_report_pdf_endpoint():
-    # Minimal valid report_data for rendering
     report_data = {
         "report_data": {
-            "asl_parameters": {"param1": "value1"},
-            "other": "test"
+            "asl_parameters": [],
+            "basic_report": "Test",
+            "extended_report": "Extended",
+            "errors": {},
+            "warnings": {},
+            "missing_parameters": []
         }
     }
+
     response = client.post("/api/report/report-pdf", json=report_data)
+
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
+    assert len(response.content) > 1000

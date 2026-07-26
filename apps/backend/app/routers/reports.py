@@ -12,6 +12,8 @@ from fastapi.responses import FileResponse
 from weasyprint import HTML
 from app.utils.report_template import render_report_html
 from app.utils.lib import default_serializer, save_upload, remove_dir
+from starlette.background import BackgroundTask
+import os
 
 report_router = APIRouter(prefix="/report")
 
@@ -122,12 +124,15 @@ async def get_report_dicom(
 
 @report_router.post("/report-pdf")
 async def download_pdf(report_data: dict):
-    print("--------------------------------")
-    print(report_data["report_data"]["asl_parameters"])
-    print("--------------------------------")
     html_content = render_report_html(report_data["report_data"])
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         HTML(string=html_content).write_pdf(tmp.name)
         tmp_path = tmp.name
-    return FileResponse(tmp_path, media_type="application/pdf", filename="report.pdf")
 
+    return FileResponse(
+        tmp_path,
+        media_type="application/pdf",
+        filename="report.pdf",
+        background=BackgroundTask(os.unlink, tmp_path)
+    )
