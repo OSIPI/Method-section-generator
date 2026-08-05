@@ -61,7 +61,9 @@ const handleBidsUpload = async ({
   files: FileList;
   setIsLoading: (v: boolean) => void;
   setUploadedFiles: (files: IAllRelevantFilesType) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setUploadConfig: (config: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setUpdatedJsonContent: (content: any) => void;
   setUpdatedJsonFilename: (filename: string) => void;
   activeModalityTypeOption: UploadModalityType;

@@ -2,7 +2,7 @@ import axios from 'axios';
 import {IReportApiResponse} from '@/types';
 
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/report`;
+const API_BASE_URL = `/api/report`;
 
 const client = axios.create({
     baseURL: API_BASE_URL,
