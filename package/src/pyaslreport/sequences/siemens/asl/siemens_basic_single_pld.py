@@ -20,3 +20,6 @@ class SiemensBasicSinglePLD(SiemensBaseSequence):
         if dcm_tags.GE_INVERSION_TIME in d:
             bids["PostLabelingDelay"] = d.get(dcm_tags.GE_INVERSION_TIME, None).value
         return bids 
+
+    def generate_asl_context(self, nifti_path: str = None) -> list:
+        return ["m0scan", "control", "label"]

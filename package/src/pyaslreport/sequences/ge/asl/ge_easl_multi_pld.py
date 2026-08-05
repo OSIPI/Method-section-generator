@@ -95,7 +95,9 @@ class GEMultiPLD(GEASLBase):
                 bids["LabelingDuration"] = LD_lin
                 bids["PostLabelingDelay"] = PLD_lin
         
-        # ASLcontext: all deltaM, last one is m0scan
-        asl_context = self._generate_asl_context(npld if npld else 2)
+        return bids
 
-        return bids, asl_context
+    def generate_asl_context(self, nifti_path: str = None) -> list:
+        dataset = self.dicom_header
+        npld = dataset.get(dcm_tags.GE_PRIVATE_CV6, None).value if dcm_tags.GE_PRIVATE_CV6 in dataset else None
+        return self._generate_asl_context(npld if npld else 2)

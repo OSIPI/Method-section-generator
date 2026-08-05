@@ -34,7 +34,10 @@ def get_bids_metadata(data):
     if sequence is None:
         raise ValueError(f"No matching sequence found for modality '{modality}' with the provided DICOM header")
     
-    return sequence.extract_bids_metadata()
+    metadata = sequence.extract_bids_metadata()
+    asl_context = sequence.generate_asl_context(data.get("nifti_file"))
+    
+    return metadata, asl_context
 
 
 def get_dicom_header(dicom_dir: str):
