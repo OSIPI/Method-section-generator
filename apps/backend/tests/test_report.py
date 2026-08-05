@@ -23,7 +23,7 @@ def test_get_report_dicom_with_invalid_file(tmp_path):
     file_path.write_text("not a dicom")
     with open(file_path, "rb") as f:
         response = client.post(
-            "/report/process/dicom",
+            "/api/report/process/dicom",
             files={"dcm_files": ("not_a_dicom.txt", f, "text/plain")},
             data={"modality": "ASL"}
         )
