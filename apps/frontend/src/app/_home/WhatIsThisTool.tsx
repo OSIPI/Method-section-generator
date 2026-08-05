@@ -20,10 +20,10 @@ const WhatIsThisTool = () => {
                 <p className="mt-3">
                     Here are some sample folders for you to download and test:
                 </p>
-                <Button className="w-fit hover:cursor-pointer" aria-label="Download sample BDIS data">
+                <Button className="w-fit hover:cursor-pointer" aria-label="Download sample BIDS data">
                     <Link href="https://drive.google.com/drive/folders/1NuG_ofLbaLYswNlBN2aRDkxLOucYFQfg"
                           target="_blank" rel="noopener noreferrer">
-                        Sample ASL BDIS data
+                        Sample ASL BIDS data
                     </Link>
                 </Button>
             </div>
