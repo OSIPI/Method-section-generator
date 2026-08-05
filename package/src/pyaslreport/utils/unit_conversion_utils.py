@@ -4,11 +4,13 @@ from .validation_utils import ValidationUtils
 
 class UnitConverterUtils:
     SECOND_TO_MILLISECOND = 1000
+    ALREADY_MS_THRESHOLD = 10
 
     @staticmethod
     def convert_to_milliseconds(values: int | float | list[int | float]) -> int | float | list[int | float]:
         """
         Convert seconds to milliseconds and round close values to integers.
+        Values already in milliseconds (e.g. scalar > 10 or any list element > 10) are left unchanged.
         Handles single numeric values or lists of values.
         Args:
             values (int | float | list[int | float]): The value(s) in seconds to convert.
@@ -17,8 +19,12 @@ class UnitConverterUtils:
         """
         def convert_value(value):
             if isinstance(value, (int, float)):
+                if value > UnitConverterUtils.ALREADY_MS_THRESHOLD:
+                    return value
                 return MathUtils.round_if_close(value * UnitConverterUtils.SECOND_TO_MILLISECOND)
             elif isinstance(value, list):
+                if any(v > UnitConverterUtils.ALREADY_MS_THRESHOLD for v in value):
+                    return value
                 return [MathUtils.round_if_close(v * UnitConverterUtils.SECOND_TO_MILLISECOND) for v in value]
             return value
 
