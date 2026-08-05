@@ -30,6 +30,7 @@ class UnitConverterUtils:
             raise TypeError("Input must be an int, float, or list of int/float.")
 
 
+    @staticmethod
     def convert_milliseconds_to_seconds(values: int | float | list[int | float]) -> int | float | list[int | float]:
         """
         Convert milliseconds to seconds and round close values to integers.
