@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import tempfile
 import pydicom
@@ -25,6 +26,8 @@ class DICOM2NiFTIConverter:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             for dcm_file in dcm_files:
+                # Copy DICOM file into temp_dir so dcm2niix can process it
+                shutil.copy2(dcm_file, temp_dir)
 
                 ds = pydicom.dcmread(dcm_file)
                 series_number_tag = ds.get((0x0020, 0x0011), None)
