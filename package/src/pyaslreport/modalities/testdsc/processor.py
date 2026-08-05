@@ -14,17 +14,18 @@ class DSCProcessor(BaseProcessor):
         """
         super().__init__(data)
 
-    def process(self) -> str:
+    def process(self) -> dict:
         """
         Process the input DSC data.
 
-        :param data: The input DSC data to be processed.
-        :return: Processed DSC data.
+        :return: Dictionary containing processing results.
         """
-        # Implement the processing logic for DSC data here
-        # For now, we will just return the input data as a placeholder
-
-        print("Processing DSC data...")
-
-        # Placeholder for actual processing logic
-        return "dsc data"
+        # DSC processing is not yet implemented — return a structured placeholder
+        # that matches the expected dict return type for all processors
+        return {
+            "status": "not_implemented",
+            "message": "DSC processing is not yet implemented.",
+            "modality": "DSC",
+            "asl_parameters": [],
+            "report": []
+        }
