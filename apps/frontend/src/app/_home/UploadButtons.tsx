@@ -6,11 +6,8 @@ import { cn } from "@/lib/utils";
 import { UploadDataType, UploadModalityType } from "@/enums";
 import { Upload as UploadIcon } from "lucide-react";
 import { useAppContext } from "@/providers/AppProvider";
-import { findNiftiFile, findRelevantFiles } from "@/utils";
-import { getReport } from "@/services/apiReport";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { IAllRelevantFilesType } from "@/types";
 import { handleBidsUpload, handleDicomUpload } from "./uploadHandlers";
 
 type TUploadDataOptions = (typeof UploadDataType)[keyof typeof UploadDataType];
@@ -62,7 +59,7 @@ const UploadButtons = () => {
       setApiData(data);
       if (
         data.missing_required_parameters &&
-        data.missing_required_parameters.length > 0
+        Number(data.missing_required_parameters.length) > 0
       ) {
         toast.info(
           "Report generated with missing parameters. Please provide the missing values."
@@ -91,7 +88,7 @@ const UploadButtons = () => {
           <Button
             type="button"
             className={cn(
-              "rounded-l-md rounded-r-none border border-input cursor-pointer",
+              "rounded-l-md rounded-r-none border border-input cursor-pointer z-10",
               activeModalityTypeOption === UploadModalityType.ASL
                 ? "bg-primary text-primary-foreground"
                 : "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
@@ -103,7 +100,19 @@ const UploadButtons = () => {
           <Button
             type="button"
             className={cn(
-              "rounded-r-md rounded-l-none border-t border-b border-r border-input -ml-px cursor-pointer",
+              "rounded-none border-t border-b border-r border-input -ml-px cursor-pointer z-10",
+              activeModalityTypeOption === UploadModalityType.DSC
+                ? "bg-primary text-primary-foreground"
+                : "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+            onClick={() => setActiveModalityTypeOption(UploadModalityType.DSC)}
+          >
+            DSC
+          </Button>
+          <Button
+            type="button"
+            className={cn(
+              "rounded-r-md rounded-l-none border-t border-b border-r border-input -ml-px cursor-pointer z-10",
               activeModalityTypeOption === UploadModalityType.DCE
                 ? "bg-primary text-primary-foreground"
                 : "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
