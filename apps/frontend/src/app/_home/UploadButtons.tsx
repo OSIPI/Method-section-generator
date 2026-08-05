@@ -6,11 +6,8 @@ import { cn } from "@/lib/utils";
 import { UploadDataType, UploadModalityType } from "@/enums";
 import { Upload as UploadIcon } from "lucide-react";
 import { useAppContext } from "@/providers/AppProvider";
-import { findNiftiFile, findRelevantFiles } from "@/utils";
-import { getReport } from "@/services/apiReport";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { IAllRelevantFilesType } from "@/types";
 import { handleBidsUpload, handleDicomUpload } from "./uploadHandlers";
 
 type TUploadDataOptions = (typeof UploadDataType)[keyof typeof UploadDataType];
@@ -62,7 +59,7 @@ const UploadButtons = () => {
       setApiData(data);
       if (
         data.missing_required_parameters &&
-        data.missing_required_parameters.length > 0
+        Number(data.missing_required_parameters.length) > 0
       ) {
         toast.info(
           "Report generated with missing parameters. Please provide the missing values."
