@@ -42,8 +42,8 @@ const NavData: {
             countType: "warnings",
         },
         {
-            title: "Convert DICOM to BDIS",
-            url: "/convert/dcm-to-bdis",
+            title: "Convert DICOM to BIDS",
+            url: "/convert/dcm-to-bids",
             icon: IconTransform,
             showCount: false,
         }

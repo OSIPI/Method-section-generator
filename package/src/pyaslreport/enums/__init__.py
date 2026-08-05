@@ -1,3 +1,3 @@
-from pyaslreport.enums.modaliy_enum import ModalityTypeValues
+from pyaslreport.enums.modality_enum import ModalityTypeValues
 
 __all__ = ["ModalityTypeValues"]
