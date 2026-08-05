@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import tempfile
+import shutil
 import pydicom
 import dicom2nifti
 
@@ -25,7 +26,7 @@ class DICOM2NiFTIConverter:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             for dcm_file in dcm_files:
-
+                shutil.copy(dcm_file, temp_dir)
                 ds = pydicom.dcmread(dcm_file)
                 series_number_tag = ds.get((0x0020, 0x0011), None)
 

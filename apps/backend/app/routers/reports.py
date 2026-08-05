@@ -121,13 +121,18 @@ async def get_report_dicom(
 
 
 @report_router.post("/report-pdf")
-async def download_pdf(report_data: dict):
+async def download_pdf(report_data: dict, background_tasks: BackgroundTasks): # <-- Added background_tasks here
     print("--------------------------------")
-    print(report_data["report_data"]["asl_parameters"])
+    print(report_data["report_data"].get("asl_parameters", "No params"))
     print("--------------------------------")
+    
     html_content = render_report_html(report_data["report_data"])
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         HTML(string=html_content).write_pdf(tmp.name)
         tmp_path = tmp.name
+        
+    # <-- Added this line to delete the file AFTER sending it
+    background_tasks.add_task(os.remove, tmp_path) 
+    
     return FileResponse(tmp_path, media_type="application/pdf", filename="report.pdf")
 
