@@ -66,7 +66,10 @@ class ReportGenerator:
 
     # Raw internal pattern tokens -> human-readable words
     _PATTERN_DISPLAY = {
-        "deltam": "deltaM",
+        # GE performs control/label subtraction on the scanner and stores only
+        # deltaM volumes, but each represents one control-label pair, so it is
+        # reported as such (meeting notes, Jan).
+        "deltam": "control-label",
         "controllabel": "control-label",
         "labelcontrol": "label-control",
     }
@@ -75,19 +78,20 @@ class ReportGenerator:
     def _pattern_words(global_pattern: str, plural: bool) -> tuple[str, str]:
         """Map an internal volume pattern to a display label and count noun.
 
+        Every ASL volume pattern is reported in control-label "pair" terms; the
+        GE "deltam" case is treated as a control-label pair rather than a
+        standalone deltaM volume.
+
         Args:
             global_pattern: Internal token (e.g. "deltam", "controllabel").
             plural: Whether the count noun should be pluralized.
 
         Returns:
-            A (label, noun) pair, e.g. ("deltaM", "volumes") or
-            ("control-label", "pair").
+            A (label, noun) pair, e.g. ("control-label", "pairs") or
+            ("label-control", "pair").
         """
         label = ReportGenerator._PATTERN_DISPLAY.get(global_pattern, global_pattern)
-        if global_pattern == "deltam":
-            noun = "volumes" if plural else "volume"
-        else:
-            noun = "pairs" if plural else "pair"
+        noun = "pairs" if plural else "pair"
         return label, noun
 
     @staticmethod

@@ -57,9 +57,9 @@ def test_format_duration_list_scalar_and_missing() -> None:
 
 
 def test_pattern_words_display_tokens() -> None:
-    """Internal volume-pattern tokens are rendered as prose labels."""
-    assert R._pattern_words("deltam", plural=True) == ("deltaM", "volumes")
-    assert R._pattern_words("deltam", plural=False) == ("deltaM", "volume")
+    """Every volume pattern is rendered in control-label pair terms."""
+    assert R._pattern_words("deltam", plural=True) == ("control-label", "pairs")
+    assert R._pattern_words("deltam", plural=False) == ("control-label", "pair")
     assert R._pattern_words("controllabel", plural=True) == ("control-label", "pairs")
     assert R._pattern_words("labelcontrol", plural=False) == ("label-control", "pair")
 
