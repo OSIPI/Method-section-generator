@@ -1,10 +1,21 @@
-from pyaslreport.modalities import asl, testdsc
-from .modalities.registry import get_processor
-from pyaslreport.sequences.factory import get_sequence
-import pydicom
-from pydicom.errors import InvalidDicomError
-import os
 import logging as log
+import os
+import warnings
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+
+import pydicom
+import pydicom.config as pydicom_config
+from pydicom.errors import InvalidDicomError
+
+from pyaslreport.modalities import asl, testdsc
+from pyaslreport.sequences.factory import get_sequence
+from pyaslreport.utils import dicom_tags_utils as dcm_tags
+from pyaslreport.utils.dicom_repair_utils import repair_dicom_dataset_in_memory
+
+from .modalities.registry import get_processor
+
 
 def generate_report(data):
     """
@@ -28,42 +39,220 @@ def get_bids_metadata(data):
     """
     modality = data.get("modality")
     dicom_dir = data.get("dicom_dir")
-    dicom_header = get_dicom_header(dicom_dir)
+    dicom_header = get_dicom_header(dicom_dir, modality=modality)
     sequence = get_sequence(modality, dicom_header)
-    
+
     if sequence is None:
-        raise ValueError(f"No matching sequence found for modality '{modality}' with the provided DICOM header")
-    
+        raise ValueError(
+            f"No matching sequence found for modality '{modality}' with the "
+            "provided DICOM header"
+        )
+
     return sequence.extract_bids_metadata()
 
 
-def get_dicom_header(dicom_dir: str):
+@dataclass
+class DicomHeaderCandidate:
+    """A readable DICOM header and its source path."""
+
+    path: str
+    header: pydicom.Dataset
+
+
+def get_dicom_header(dicom_dir: str, modality: object | None = None) -> pydicom.Dataset:
+    """Extract a representative DICOM header from a directory.
+
+    Args:
+        dicom_dir: Directory containing DICOM files.
+        modality: Optional modality used to choose a better ASL header.
+
+    Returns:
+        DICOM header selected for metadata extraction.
+
+    Raises:
+        ValueError: If no readable DICOM files are found.
     """
-    Extracts the DICOM header from the provided DICOM files.
-    :param dicom_dir: Directory containing DICOM files.
-    :return: DICOM header from the first valid DICOM file found.
-    """
-    # Get all files in the directory
-    all_files = [f for f in os.listdir(dicom_dir) if os.path.isfile(os.path.join(dicom_dir, f))]
-    
-    # Try to find DICOM files by attempting to read them with pydicom
-    dcm_files = []
+    all_files = sorted(
+        f for f in os.listdir(dicom_dir) if os.path.isfile(os.path.join(dicom_dir, f))
+    )
+
+    candidates: list[DicomHeaderCandidate] = []
     for file in all_files:
         file_path = os.path.join(dicom_dir, file)
         try:
-            # Try to read the file as DICOM
-            pydicom.dcmread(file_path, stop_before_pixels=True)
-            dcm_files.append(file)
+            with _silence_pydicom_invalid_vr_warnings():
+                dcm_header = pydicom.dcmread(file_path, stop_before_pixels=True)
+                repair_dicom_dataset_in_memory(dcm_header)
+            candidates.append(DicomHeaderCandidate(file_path, dcm_header))
         except (InvalidDicomError, OSError, PermissionError):
-            # File is not a valid DICOM file or cannot be read
             continue
 
-    log.info(f"Found {len(dcm_files)} DICOM files in {dicom_dir}")
+    log.info(f"Found {len(candidates)} DICOM files in {dicom_dir}")
 
-    if not dcm_files:
+    if not candidates:
         raise ValueError(f"No DICOM files found in directory: {dicom_dir}")
-    
-    # Read the first valid DICOM file
-    dcm_header = pydicom.dcmread(os.path.join(dicom_dir, dcm_files[0]))
-    
-    return dcm_header
+
+    return _select_best_dicom_header(candidates, modality)
+
+
+@contextmanager
+def _silence_pydicom_invalid_vr_warnings() -> Iterator[None]:
+    """Silence known invalid-VR warning noise while repair checks a header."""
+    pydicom_logger = log.getLogger("pydicom")
+    previous_level = pydicom_logger.level
+    previous_validation_mode = pydicom_config.settings.reading_validation_mode
+    pydicom_logger.setLevel(log.ERROR)
+    pydicom_config.settings.reading_validation_mode = pydicom_config.IGNORE
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            yield
+    finally:
+        pydicom_config.settings.reading_validation_mode = previous_validation_mode
+        pydicom_logger.setLevel(previous_level)
+
+
+def _select_best_dicom_header(
+    candidates: list[DicomHeaderCandidate], modality: object | None = None
+) -> pydicom.Dataset:
+    """Choose a deterministic representative header for metadata extraction."""
+    if _is_asl_modality(modality):
+        ge_candidates = [
+            candidate
+            for candidate in candidates
+            if _is_ge_manufacturer(candidate.header)
+        ]
+        if ge_candidates:
+            return _select_best_ge_asl_header(ge_candidates)
+
+    return sorted(candidates, key=_candidate_sort_key)[0].header
+
+
+def _select_best_ge_asl_header(
+    candidates: list[DicomHeaderCandidate],
+) -> pydicom.Dataset:
+    """Choose the most complete representative header for a GE ASL series."""
+    internal_names = [
+        _ge_internal_sequence_name(candidate.header) for candidate in candidates
+    ]
+    non_empty_names = [name for name in internal_names if name]
+
+    # A missing internal sequence name is not fatal: per GE guidance, absence of
+    # the tag (or any value other than 'easl') is treated as basic single-PLD.
+    sequence_kind = (
+        "ge_easl_multi_pld" if "easl" in non_empty_names else "ge_basic_single_pld"
+    )
+    return max(
+        candidates,
+        key=lambda candidate: (
+            _score_ge_asl_header(candidate.header, sequence_kind),
+            -_candidate_sort_key(candidate)[0],
+            _candidate_sort_key(candidate)[1],
+        ),
+    ).header
+
+
+def _score_ge_asl_header(dicom_header: pydicom.Dataset, sequence_kind: str) -> int:
+    """Score a GE ASL header by sequence-specific metadata completeness."""
+    score = 0
+
+    if _is_ge_manufacturer(dicom_header):
+        score += 100
+
+    internal_name = _ge_internal_sequence_name(dicom_header)
+    if internal_name:
+        score += 20
+
+    if sequence_kind == "ge_easl_multi_pld":
+        if internal_name == "easl":
+            score += 500
+        else:
+            score -= 1000
+        essential_tags = [
+            dcm_tags.GE_PRIVATE_CV4,
+            dcm_tags.GE_PRIVATE_CV5,
+            dcm_tags.GE_PRIVATE_CV6,
+            dcm_tags.GE_PRIVATE_CV7,
+        ]
+    else:
+        if internal_name != "easl":
+            score += 500
+        else:
+            score -= 1000
+        essential_tags = [
+            dcm_tags.GE_LABEL_DURATION,
+            dcm_tags.GE_INVERSION_TIME,
+        ]
+
+    for tag in essential_tags:
+        if _has_non_empty_value(dicom_header, tag):
+            score += 100
+        else:
+            score -= 100
+
+    for tag in [
+        dcm_tags.ECHO_TIME,
+        dcm_tags.MAGNETIC_FIELD_STRENGTH,
+        dcm_tags.MR_ACQUISITION_TYPE,
+        dcm_tags.FLIP_ANGLE,
+        dcm_tags.GE_ASSET_R_FACTOR,
+        dcm_tags.GE_NUMBER_OF_EXCITATIONS,
+    ]:
+        if _has_non_empty_value(dicom_header, tag):
+            score += 10
+
+    return score
+
+
+def _candidate_sort_key(candidate: DicomHeaderCandidate) -> tuple[int, str]:
+    """Return a deterministic ordering key for DICOM header candidates."""
+    instance = _value(candidate.header, dcm_tags.INSTANCE_NUMBER)
+    try:
+        instance_number = int(instance)
+    except (TypeError, ValueError):
+        instance_number = 10**9
+    return instance_number, os.path.basename(candidate.path)
+
+
+def _is_asl_modality(modality: object | None) -> bool:
+    """Return True when a modality object or string represents ASL."""
+    if modality is None:
+        return False
+    name = getattr(modality, "name", None)
+    value = getattr(modality, "value", None)
+    return modality == "asl" or name == "ASL" or value == "asl"
+
+
+def _is_ge_manufacturer(dicom_header: pydicom.Dataset) -> bool:
+    """Return True when the DICOM manufacturer identifies GE."""
+    manufacturer = _value(dicom_header, dcm_tags.MANUFACTURER, "")
+    manufacturer = str(manufacturer).strip().upper()
+    return "GE" in manufacturer or "GENERAL ELECTRIC" in manufacturer
+
+
+def _ge_internal_sequence_name(dicom_header: pydicom.Dataset) -> str | None:
+    """Return the normalized GE internal sequence name, if present."""
+    value = _value(dicom_header, dcm_tags.GE_INTERNAL_SEQUENCE_NAME)
+    if value is None or str(value).strip() == "":
+        return None
+    return str(value).strip().lower()
+
+
+def _has_non_empty_value(dicom_header: pydicom.Dataset, tag: object) -> bool:
+    """Return True when a DICOM tag exists and carries a non-empty value."""
+    value = _value(dicom_header, tag)
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return value.strip() != ""
+    return True
+
+
+def _value(
+    dicom_header: pydicom.Dataset, tag: object, default: object | None = None
+) -> object | None:
+    """Return a DICOM element value or a caller-provided default."""
+    elem = dicom_header.get(tag)
+    if elem is None:
+        return default
+    return getattr(elem, "value", elem)
