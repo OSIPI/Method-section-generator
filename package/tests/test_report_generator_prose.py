@@ -41,7 +41,7 @@ def test_join_and() -> None:
 
 def test_format_duration_list_collapses_identical() -> None:
     """Identical duration arrays collapse to one displayed value."""
-    assert R._format_duration_list([1166.67, 1166.67, 1166.67]) == "1166.67ms"
+    assert R._format_duration_list([1450.0, 1450.0, 1450.0]) == "1450ms"
 
 
 def test_format_duration_list_keeps_distinct() -> None:
@@ -54,6 +54,30 @@ def test_format_duration_list_scalar_and_missing() -> None:
     assert R._format_duration_list(1450) == "1450ms"
     assert R._format_duration_list("N/A") == ""
     assert R._format_duration_list(None) == ""
+
+
+def test_fmt_num_caps_significant_figures() -> None:
+    """Numbers are rounded to at most four significant figures for display."""
+    assert R._fmt_num(1166.6666667) == 1167
+    assert R._fmt_num(2166.666666666667) == 2167
+    assert R._fmt_num(3333.3333333333335) == 3333
+    assert R._fmt_num(11.24) == 11.24
+    assert R._fmt_num(0.2) == 0.2
+    assert R._fmt_num(1000.0) == 1000
+
+
+def test_fmt_num_leaves_non_numbers_unchanged() -> None:
+    """Non-numeric values and booleans pass through untouched."""
+    assert R._fmt_num("N/A") == "N/A"
+    assert R._fmt_num(None) is None
+    assert R._fmt_num(True) is True
+    assert R._fmt_num(0) == 0
+
+
+def test_format_duration_list_rounds_values() -> None:
+    """Long decimals are capped when a duration list is rendered."""
+    assert R._format_duration_list([1166.6666667, 1166.6666667]) == "1167ms"
+    assert R._format_duration_list(2166.666666666667) == "2167ms"
 
 
 def test_pattern_words_display_tokens() -> None:

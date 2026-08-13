@@ -1,3 +1,4 @@
+import math
 from collections import Counter
 from typing import Any
 
@@ -44,6 +45,28 @@ class ReportGenerator:
         return ", ".join(text_parts[:-1]) + ", and " + text_parts[-1]
 
     @staticmethod
+    def _fmt_num(value: object, sig: int = 4) -> object:
+        """Round a number to `sig` significant figures for display.
+
+        Non-numeric values (including booleans) are returned unchanged. A whole
+        result is returned as an int so it renders without a trailing ".0".
+
+        Args:
+            value: Value to format; only ints and floats are rounded.
+            sig: Number of significant figures to keep.
+
+        Returns:
+            The rounded number (int when whole), or the value unchanged.
+        """
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return value
+        if value == 0 or not math.isfinite(value):
+            return value
+        digits = sig - 1 - math.floor(math.log10(abs(value)))
+        rounded = round(value, digits)
+        return int(rounded) if rounded == int(rounded) else rounded
+
+    @staticmethod
     def _format_duration_list(value: object, unit: str = "ms") -> str:
         """Format a duration value or list, collapsing identical entries.
 
@@ -58,11 +81,12 @@ class ReportGenerator:
         if ReportGenerator._is_missing(value):
             return ""
         if isinstance(value, (list, tuple)):
-            uniq = list(dict.fromkeys(value))  # de-duplicate, preserve order
+            formatted = [ReportGenerator._fmt_num(v) for v in value]
+            uniq = list(dict.fromkeys(formatted))  # de-duplicate, preserve order
             if len(uniq) == 1:
                 return f"{uniq[0]}{unit}"
-            return ", ".join(f"{v}{unit}" for v in value)
-        return f"{value}{unit}"
+            return ", ".join(f"{v}{unit}" for v in formatted)
+        return f"{ReportGenerator._fmt_num(value)}{unit}"
 
     # Raw internal pattern tokens -> human-readable words
     _PATTERN_DISPLAY = {
@@ -125,6 +149,7 @@ class ReportGenerator:
         """
         asl_parameters = []
         is_missing = ReportGenerator._is_missing
+        fmt_num = ReportGenerator._fmt_num
 
         # ---- extraction (unchanged from original) ----
         pld_type = ReportGenerator.handle_bolus_cutoff_technique(
@@ -343,9 +368,9 @@ class ReportGenerator:
         geo = []
         te_ok, tr_ok = not is_missing(echo_time), not is_missing(repetition_time)
         if te_ok and tr_ok:
-            geo.append(f"TR/TE = {repetition_time}/{echo_time}ms")
+            geo.append(f"TR/TE = {repetition_time}/{fmt_num(echo_time)}ms")
         elif te_ok:
-            geo.append(f"TE = {echo_time}ms")
+            geo.append(f"TE = {fmt_num(echo_time)}ms")
         elif tr_ok:
             geo.append(f"TR = {repetition_time}")
         if not is_missing(voxel_size_1_2):
@@ -355,7 +380,7 @@ class ReportGenerator:
         if not is_missing(voxel_size_3):
             geo.append(f"a slice thickness of {voxel_size_3}mm")
         if not is_missing(flip_angle):
-            geo.append(f"a flip angle of {flip_angle} degrees")
+            geo.append(f"a flip angle of {fmt_num(flip_angle)} degrees")
 
         asl_parameters.append(("Echo Time", f"{echo_time}ms"))
         asl_parameters.append(("Repetition Time", repetition_time))
@@ -710,6 +735,11 @@ class ReportGenerator:
         status, pld_values, _ = ReportGenerator.handle_inconsistency(
             values, key, combined_errors
         )
+        # Round PLD values to 4 significant figures for display.
+        if isinstance(pld_values, (list, tuple)):
+            pld_values = [ReportGenerator._fmt_num(v) for v in pld_values]
+        else:
+            pld_values = ReportGenerator._fmt_num(pld_values)
 
         @staticmethod
         def format_pld_array(pld_array):
