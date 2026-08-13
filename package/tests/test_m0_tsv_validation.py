@@ -143,6 +143,29 @@ class TestTSVValidation:
         )
         assert asl_data["TotalAcquiredPairs"] == 2  # two control-label pairs
 
+    def test_m0scan_with_missing_repetition_time_warns_without_crashing(
+        self,
+        make_processor: Callable[..., ASLProcessor],
+        make_context: Callable[..., ProcessingContext],
+    ) -> None:
+        """M0 timing cannot be assessed without RepetitionTimePreparation."""
+        proc = make_processor()
+        ctx = make_context(m0_type="Included")
+        asl_data = {"M0Type": "Included", "BackgroundSuppression": False}
+        tsv_data = ["deltaM", "m0scan"]
+
+        proc._analyze_tsv_volume_types(
+            tsv_data, ctx, "asl.json", asl_data, "context.tsv"
+        )
+
+        expected_warning = (
+            "Warning: Cannot determine M0 preparation timing for ASL file "
+            "'asl.json' because neither 'RepetitionTimePreparation' nor "
+            "'RepetitionTime' is present, but TSV file 'context.tsv' contains "
+            "m0scan."
+        )
+        assert ctx.warnings == [expected_warning]
+
 
 # ---------- _handle_no_m0scan_warnings ----------
 
