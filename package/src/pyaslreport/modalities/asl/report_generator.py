@@ -1,23 +1,131 @@
 from collections import Counter
+from typing import Any
 
 
 class ReportGenerator:
     from collections import Counter
 
-    # Function to generate the ASL report based on the provided values and error data.
-    # The function constructs a detailed text report and also extracts key parameters for further use.
+    # =====================================================================
+    # Tier 1 helpers (readability / cohesion)
+    # =====================================================================
     @staticmethod
-    def generate_asl_report(values, combined_major_errors, combined_errors, global_pattern, m0_type,
-                            total_acquired_pairs, slice_number):
-        report_lines = []
+    def _is_missing(value: object) -> bool:
+        """Return whether a value carries no usable report information.
+
+        Args:
+            value: Extracted parameter value to inspect.
+
+        Returns:
+            True when the value is None or a blank / "N/A" string.
+        """
+        if value is None:
+            return True
+        if isinstance(value, str) and value.strip() in ("", "N/A"):
+            return True
+        return False
+
+    @staticmethod
+    def _join_and(parts: list[object]) -> str:
+        """Join items into natural-language prose with an Oxford comma.
+
+        Args:
+            parts: Items to join; falsy items are dropped.
+
+        Returns:
+            "" for no items, "a", "a and b", or "a, b, and c".
+        """
+        text_parts = [str(part) for part in parts if part]
+        if not text_parts:
+            return ""
+        if len(text_parts) == 1:
+            return text_parts[0]
+        if len(text_parts) == 2:
+            return f"{text_parts[0]} and {text_parts[1]}"
+        return ", ".join(text_parts[:-1]) + ", and " + text_parts[-1]
+
+    @staticmethod
+    def _format_duration_list(value: object, unit: str = "ms") -> str:
+        """Format a duration value or list, collapsing identical entries.
+
+        Args:
+            value: Scalar duration, list/tuple of durations, or a missing value.
+            unit: Unit suffix appended to each rendered number.
+
+        Returns:
+            "" when the value is missing, a single "<n><unit>" when a list holds
+            one unique value, otherwise the comma-joined values.
+        """
+        if ReportGenerator._is_missing(value):
+            return ""
+        if isinstance(value, (list, tuple)):
+            uniq = list(dict.fromkeys(value))  # de-duplicate, preserve order
+            if len(uniq) == 1:
+                return f"{uniq[0]}{unit}"
+            return ", ".join(f"{v}{unit}" for v in value)
+        return f"{value}{unit}"
+
+    # Raw internal pattern tokens -> human-readable words
+    _PATTERN_DISPLAY = {
+        "deltam": "deltaM",
+        "controllabel": "control-label",
+        "labelcontrol": "label-control",
+    }
+
+    @staticmethod
+    def _pattern_words(global_pattern: str, plural: bool) -> tuple[str, str]:
+        """Map an internal volume pattern to a display label and count noun.
+
+        Args:
+            global_pattern: Internal token (e.g. "deltam", "controllabel").
+            plural: Whether the count noun should be pluralized.
+
+        Returns:
+            A (label, noun) pair, e.g. ("deltaM", "volumes") or
+            ("control-label", "pair").
+        """
+        label = ReportGenerator._PATTERN_DISPLAY.get(global_pattern, global_pattern)
+        if global_pattern == "deltam":
+            noun = "volumes" if plural else "volume"
+        else:
+            noun = "pairs" if plural else "pair"
+        return label, noun
+
+    @staticmethod
+    def generate_asl_report(
+        values: dict[str, Any],
+        combined_major_errors: dict[str, Any],
+        combined_errors: dict[str, Any],
+        global_pattern: str | None,
+        m0_type: str | None,
+        total_acquired_pairs: int | None,
+        slice_number: int,
+    ) -> tuple[str, list[tuple[str, Any]]]:
+        """Build the ASL Methods paragraph and its structured parameter list.
+
+        Rewritten as a modular, multi-sentence builder: scanner/family,
+        timing/suppression, and geometry/repetitions. Clauses whose values are
+        missing drop out entirely instead of emitting placeholders.
+
+        Args:
+            values: Extracted BIDS parameter values keyed by field name.
+            combined_major_errors: Major-error data keyed by field name.
+            combined_errors: Non-major error/inconsistency data keyed by field.
+            global_pattern: ASL volume pattern token, or None.
+            m0_type: M0 acquisition type, or None.
+            total_acquired_pairs: Number of acquired control-label pairs, or None.
+            slice_number: Number of slices from the NIfTI header.
+
+        Returns:
+            A (report_paragraph, asl_parameters) tuple, where asl_parameters is
+            a list of (label, value) pairs.
+        """
         asl_parameters = []
+        is_missing = ReportGenerator._is_missing
 
+        # ---- extraction (unchanged from original) ----
         pld_type = ReportGenerator.handle_bolus_cutoff_technique(values, 'PLDType', combined_major_errors)
-        # total_acquired_pairs = ReportGenerator.extract_value(values, "TotalAcquiredPairs", combined_errors)
-
         extended_pld_text = ReportGenerator.handle_pld_values(values, combined_errors, 'PostLabelingDelay',
-                                              global_pattern, m0_type)
-
+                                                              global_pattern, m0_type)
         magnetic_field_strength = ReportGenerator.extract_value(values, "MagneticFieldStrength", combined_errors)
         manufacturer = ReportGenerator.extract_value(values, "Manufacturer", combined_errors)
         manufacturers_model_name = ReportGenerator.extract_and_format_unique_string_values(values,
@@ -25,157 +133,209 @@ class ReportGenerator:
         asl_type = ReportGenerator.extract_value(values, "ArterialSpinLabelingType", combined_major_errors)
         mr_acq_type = ReportGenerator.extract_value(values, "MRAcquisitionType", combined_major_errors)
         pulse_seq_type = ReportGenerator.extract_value(values, "PulseSequenceType", combined_major_errors)
-
         if pulse_seq_type == "3Dgrase":
             pulse_seq_type = "GRASE"
-
         echo_time = ReportGenerator.extract_value(values, "EchoTime", combined_errors)
         repetition_time = ReportGenerator.handle_pld_values(values, combined_errors, 'RepetitionTimePreparation')
-
         flip_angle = ReportGenerator.extract_value(values, "FlipAngle", combined_errors)
         labeling_duration = ReportGenerator.extract_value(values, "LabelingDuration", combined_errors)
-
         voxel_size_1_2, voxel_size_3 = ReportGenerator.handle_voxel_size(values, combined_errors)
-
         bolus_cutoff_flag = ReportGenerator.handle_bolus_cutoff_flag(values, 'BolusCutOffFlag', combined_errors)
         bolus_cutoff_technique = ReportGenerator.handle_bolus_cutoff_technique(values, 'BolusCutOffTechnique',
                                                                combined_errors)
         bolus_cutoff_delay_time = ReportGenerator.handle_bolus_cutoff_delay_time(values, combined_errors)
-
         background_suppression = ReportGenerator.handle_bolus_cutoff_flag(values, 'BackgroundSuppression',
                                                           combined_errors)
         background_suppression_number_pulses = ReportGenerator.extract_value(values, 'BackgroundSuppressionNumberPulses',
                                                              combined_errors, report_range=True)
         background_suppression_pulse_time = ReportGenerator.extract_value(values, 'BackgroundSuppressionPulseTime',
                                                           combined_errors)
-
         acquisition_duration = ReportGenerator.extract_value(values, "AcquisitionDuration", combined_errors,
                                              format_duration=True)
         pasl_type = ReportGenerator.extract_value(values, "PASLType", combined_errors, recommneded=True)
         labeling_slab_thickness = ReportGenerator.extract_value(values, "LabelingSlabThickness", combined_errors,
                                                 recommneded=True)
 
-        report_lines.append(
-            f"ASL was acquired on a {magnetic_field_strength}T {manufacturer}"
-            f" {manufacturers_model_name} scanner using {pld_type} "
+        is_pasl = str(asl_type).upper() == 'PASL'
+        is_pcasl = str(asl_type).upper() in ('PCASL', 'CASL')
+
+        # =================================================================
+        # Sentence 1: scanner + acquisition family + readout
+        # =================================================================
+        scanner = ""
+        if not is_missing(magnetic_field_strength):
+            scanner += f"{magnetic_field_strength}T "
+        for part in (manufacturer, manufacturers_model_name):
+            if not is_missing(part):
+                scanner += f"{part} "
+        scanner = scanner.strip()
+        s1 = "ASL was acquired on a " + (
+            f"{scanner} scanner." if scanner else "scanner."
         )
+
+        # labeling phrase (drop 'N/A' ASL type instead of writing 'N/A labeling')
+        family = ReportGenerator._join_and([]) or " ".join(
+            [
+                p
+                for p in (
+                    pld_type if not is_missing(pld_type) else "",
+                    pasl_type if not is_missing(pasl_type) else "",
+                    asl_type if not is_missing(asl_type) else "",
+                )
+                if p
+            ]
+        )
+        # readout: de-duplicate dimensionality vs readout type ('3D 3D' -> '3D')
+        readout_parts = []
+        if not is_missing(mr_acq_type):
+            readout_parts.append(mr_acq_type)
+        if not is_missing(pulse_seq_type) and pulse_seq_type != mr_acq_type:
+            readout_parts.append(pulse_seq_type)
+        readout = " ".join(readout_parts)
+
+        family_cap = (family[0].upper() + family[1:]) if family else family
+        if family and readout:
+            s1 += f" {family_cap} labeling was performed with a {readout} readout."
+        elif family:
+            s1 += f" {family_cap} labeling was performed."
+        elif readout:
+            s1 += f" A {readout} readout was used."
+
         asl_parameters.append(("Magnetic Field Strength", f"{magnetic_field_strength}T"))
         asl_parameters.append(("Manufacturer", manufacturer))
         asl_parameters.append(("Manufacturer's Model Name", manufacturers_model_name))
         asl_parameters.append(("PLD Type", pld_type))
-
-        if pasl_type != "":
-            report_lines.append(f"{pasl_type} ")
+        if not is_missing(pasl_type):
             asl_parameters.append(("PASL Type", pasl_type))
-
-        report_lines.append(
-            f"{asl_type} labeling and a {mr_acq_type} {pulse_seq_type} readout with the following parameters: "
-        )
         asl_parameters.append(("ASL Type", asl_type))
         asl_parameters.append(("MR Acquisition Type", mr_acq_type))
         asl_parameters.append(("Pulse Sequence Type", pulse_seq_type))
 
-        report_lines.append(
-            f"TE = {echo_time}ms, TR = {repetition_time}, "
-            f"flip angle {flip_angle} degrees, "
-        )
+        # =================================================================
+        # Sentence 2: ASL timing + background suppression
+        # =================================================================
+        timing = ""
+        if is_pcasl:
+            ld = ReportGenerator._format_duration_list(labeling_duration, "ms")
+            pld = "" if is_missing(extended_pld_text) else str(extended_pld_text)
+            if ld:
+                asl_parameters.append(("Labeling Duration", labeling_duration))
+            if pld:
+                asl_parameters.append(("PLD", extended_pld_text))
+            pld_word = "a PLD of" if ("," not in pld) else "PLDs of"
+            if ld and pld:
+                timing = f"The labeling duration was {ld}, followed by {pld_word} {pld}"
+            elif ld:
+                timing = f"The labeling duration was {ld}"
+            elif pld:
+                timing = f"{pld_word[0].upper() + pld_word[1:]} {pld}"
+        elif is_pasl:
+            inv = "" if is_missing(extended_pld_text) else str(extended_pld_text)
+            inv_word = (
+                "an inversion time of" if ("," not in inv) else "inversion times of"
+            )
+            if inv:
+                timing = f"Labeling used {inv_word} {inv}"
+                asl_parameters.append(("Inversion Time", extended_pld_text))
+            if not is_missing(labeling_slab_thickness):
+                clause = f"a labeling slab thickness of {labeling_slab_thickness}mm"
+                timing = (
+                    f"{timing}, with {clause}"
+                    if timing
+                    else clause[0].upper() + clause[1:]
+                )
+                asl_parameters.append(("Labeling Slab Thickness", f"{labeling_slab_thickness}mm"))
+            if bolus_cutoff_flag == "with":
+                bolus = "with bolus saturation"
+                if not is_missing(bolus_cutoff_technique):
+                    bolus += f" using a {bolus_cutoff_technique} pulse"
+                    asl_parameters.append(("Bolus Cutoff Technique", bolus_cutoff_technique))
+                if not is_missing(bolus_cutoff_delay_time):
+                    bolus += f" applied {bolus_cutoff_delay_time} after labeling"
+                    asl_parameters.append(("Bolus Cutoff Delay Time", bolus_cutoff_delay_time))
+                timing = (
+                    f"{timing}, {bolus}"
+                    if timing
+                    else bolus[0].upper() + bolus[1:]
+                )
+                asl_parameters.append(("Bolus Cutoff Flag", bolus_cutoff_flag))
+            elif bolus_cutoff_flag == "without":
+                asl_parameters.append(("Bolus Cutoff Flag", bolus_cutoff_flag))
+
+        suppression = ""
+        if background_suppression == "with":
+            suppression = "Background suppression was applied"
+            if not is_missing(background_suppression_number_pulses):
+                suppression += f" using {background_suppression_number_pulses} pulses"
+                asl_parameters.append(
+                    (
+                        "Background Suppression Number of Pulses",
+                        background_suppression_number_pulses,
+                    )
+                )
+            if not is_missing(background_suppression_pulse_time):
+                times = ReportGenerator.format_background_suppression(
+                    background_suppression_pulse_time
+                )
+                suppression += f", with pulses at {times} after the start of labeling"
+                asl_parameters.append(("Background Suppression Pulse Time", times))
+        elif background_suppression == "without":
+            suppression = "Background suppression was not applied"
+        elif not is_missing(background_suppression):
+            suppression = f"Background suppression was {background_suppression}"
+        if not is_missing(background_suppression):
+            asl_parameters.append(("Background Suppression", background_suppression))
+
+        s2 = ". ".join([c for c in (timing, suppression) if c])
+        if s2:
+            s2 += "."
+
+        # =================================================================
+        # Sentence 3: imaging geometry + repetitions
+        # =================================================================
+        geo = []
+        te_ok, tr_ok = not is_missing(echo_time), not is_missing(repetition_time)
+        if te_ok and tr_ok:
+            geo.append(f"TR/TE = {repetition_time}/{echo_time}ms")
+        elif te_ok:
+            geo.append(f"TE = {echo_time}ms")
+        elif tr_ok:
+            geo.append(f"TR = {repetition_time}")
+        if not is_missing(voxel_size_1_2):
+            geo.append(f"an in-plane resolution of {voxel_size_1_2}mm^2")
+        if slice_number:
+            geo.append(f"{slice_number} slices")
+        if not is_missing(voxel_size_3):
+            geo.append(f"a slice thickness of {voxel_size_3}mm")
+        if not is_missing(flip_angle):
+            geo.append(f"a flip angle of {flip_angle} degrees")
+
         asl_parameters.append(("Echo Time", f"{echo_time}ms"))
         asl_parameters.append(("Repetition Time", repetition_time))
         asl_parameters.append(("Flip Angle", flip_angle))
-
-        report_lines.append(
-            f"in-plane resolution {voxel_size_1_2}mm^2, "
-        )
         asl_parameters.append(("In-plane Resolution", f"{voxel_size_1_2}mm^2"))
-
-        report_lines.append(
-            f"{slice_number} slices with {voxel_size_3}mm thickness, "
-        )
         asl_parameters.append(("Slice Thickness", f"{voxel_size_3}mm"))
 
-        if asl_type == 'PCASL':
-            report_lines.append(
-                f"labeling duration {labeling_duration}ms, "
-            )
-            asl_parameters.append(("Labeling Duration", labeling_duration))
+        s3 = (
+            f"Images were acquired with {ReportGenerator._join_and(geo)}."
+            if geo
+            else ""
+        )
 
-            report_lines.append(
-                f"PLD {extended_pld_text}, "
-            )
-            asl_parameters.append(("PLD", extended_pld_text))
+        # repetitions (guarded so a missing count never prints 'None')
+        rep = ""
+        if not is_missing(total_acquired_pairs):
+            plural = (total_acquired_pairs != 1)
+            label, noun = ReportGenerator._pattern_words(global_pattern, plural)
+            verb = "were" if plural else "was"
+            rep = f"In total, {total_acquired_pairs} {label} {noun} {verb} acquired"
+            if acquisition_duration != "N/A":
+                rep += f" over a {acquisition_duration} acquisition"
+                asl_parameters.append(("Acquisition Duration", acquisition_duration))
+            rep += "."
+        asl_parameters.append(("Total Acquired Pairs", total_acquired_pairs))
 
-        if asl_type.upper() == 'PASL':
-            report_lines.append(
-                f"inversion time {extended_pld_text}, "
-            )
-            asl_parameters.append(("Inversion Time", extended_pld_text))
-
-            if labeling_slab_thickness != "":
-                report_lines.append(
-                    f"labeling slab thickness {labeling_slab_thickness}mm, "
-                )
-                asl_parameters.append(("Labeling Slab Thickness", f"{labeling_slab_thickness}mm"))
-
-            if bolus_cutoff_flag is not None:
-                report_lines.append(
-                    f"{bolus_cutoff_flag} bolus saturation "
-                )
-                asl_parameters.append(("Bolus Cutoff Flag", bolus_cutoff_flag))
-                if bolus_cutoff_flag == "with":
-                    report_lines.append(
-                        f"using {bolus_cutoff_technique} pulse "
-                    )
-                    asl_parameters.append(("Bolus Cutoff Technique", bolus_cutoff_technique))
-                    report_lines.append(
-                        f"applied {bolus_cutoff_delay_time} after the labeling, "
-                    )
-                    asl_parameters.append(("Bolus Cutoff Delay Time", bolus_cutoff_delay_time))
-
-        if background_suppression is not None:
-            report_lines.append(f"{background_suppression} background suppression")
-            asl_parameters.append(("Background Suppression", background_suppression))
-
-            if background_suppression_number_pulses is not None and background_suppression_number_pulses != "N/A":
-                report_lines.append(
-                    f" with {background_suppression_number_pulses} pulses")
-                asl_parameters.append(
-                    ("Background Suppression Number of Pulses", background_suppression_number_pulses))
-            if background_suppression_pulse_time is not None and background_suppression_pulse_time != "N/A":
-                report_lines.append(
-                    f" at {ReportGenerator.format_background_suppression(background_suppression_pulse_time)} after the start of labeling")
-                asl_parameters.append(
-                    ("Background Suppression Pulse Time",
-                     ReportGenerator.format_background_suppression(background_suppression_pulse_time)))
-            report_lines.append(".")
-
-        if total_acquired_pairs == 1:
-            if (global_pattern == "deltam"):
-                classifer = "volume"
-            else:
-                classifer = "pair"
-
-            report_lines.append(
-                f" In total, {total_acquired_pairs} {global_pattern} {classifer} was acquired"
-            )
-        else:
-            if (global_pattern == "deltam"):
-                classifer = "volumes"
-            else:
-                classifer = "pairs"
-
-            report_lines.append(
-                f" In total, {total_acquired_pairs} {global_pattern} {classifer} were acquired"
-            )
-
-        asl_parameters.append(
-            ("Total Acquired Pairs", total_acquired_pairs))
-
-        if acquisition_duration != "N/A":
-            report_lines.append(f" in a {acquisition_duration} time.")
-            asl_parameters.append(("Acquisition Duration", acquisition_duration))
-        else:
-            report_lines.append(".")
-        report_paragraph = "".join(line for line in report_lines)
+        report_paragraph = " ".join([s for s in (s1, s2, s3, rep) if s])
         return report_paragraph, asl_parameters
 
     # Function to generate a report for M0 scans based on provided parameters.
@@ -498,7 +658,7 @@ class ReportGenerator:
             else:
                 return f"at {bolus_cutoff_delay_time}ms"
         elif status == "inconsistent_common":
-            return f"(inconsistent, {bolus_cutoff_delay_time}ms is the most common"
+            return f"(inconsistent, {bolus_cutoff_delay_time}ms is the most common)"
         else:
             return "(inconsistent, no common data)"
 
