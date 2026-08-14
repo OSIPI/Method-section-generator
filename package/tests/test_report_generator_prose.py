@@ -80,6 +80,19 @@ def test_format_duration_list_rounds_values() -> None:
     assert R._format_duration_list(2166.666666666667) == "2167ms"
 
 
+def test_within_tolerance() -> None:
+    """The 1% tolerance check groups near-identical values."""
+    assert R._within_tolerance([1160.0, 1170.0]) is True
+    assert R._within_tolerance([1000.0, 1100.0]) is False
+    assert R._within_tolerance([1450.0, 1450.0]) is True
+
+
+def test_format_duration_list_collapses_near_identical() -> None:
+    """Timing arrays within 1% collapse to a single representative value."""
+    assert R._format_duration_list([1160.0, 1170.0]) == "1165ms"
+    assert R._format_duration_list([1000.0, 1100.0]) == "1000ms, 1100ms"
+
+
 def test_pattern_words_display_tokens() -> None:
     """Every volume pattern is rendered in control-label pair terms."""
     assert R._pattern_words("deltam", plural=True) == ("control-label", "pairs")
