@@ -209,3 +209,57 @@ class TestBackgroundSuppressionWarnings:
         asl_data = {"BackgroundSuppression": True}
         proc._handle_no_m0scan_warnings(ctx, "asl.json", asl_data)
         assert any("relative quantification" in w for w in ctx.warnings)
+
+
+# ---------- _warn_if_voxel_geometry_missing ----------
+
+
+class TestVoxelGeometryWarnings:
+    def test_missing_voxel_geometry_warns(
+        self,
+        make_processor: Callable[..., ASLProcessor],
+        make_context: Callable[..., ProcessingContext],
+    ) -> None:
+        """Absent AcquisitionVoxelSize surfaces a warning to the user."""
+        proc = make_processor()
+        ctx = make_context()
+        asl_data = {"M0Type": "Included"}
+
+        proc._warn_if_voxel_geometry_missing(ctx, "asl.json", asl_data)
+
+        expected = (
+            "Warning: Acquisition voxel geometry is missing for ASL file "
+            "'asl.json'; 'AcquisitionVoxelSize' is absent or incomplete, so "
+            "in-plane resolution and slice thickness are omitted from the "
+            "report."
+        )
+        assert ctx.warnings == [expected]
+
+    def test_incomplete_voxel_geometry_warns(
+        self,
+        make_processor: Callable[..., ASLProcessor],
+        make_context: Callable[..., ProcessingContext],
+    ) -> None:
+        """A voxel array with fewer than three values still warns."""
+        proc = make_processor()
+        ctx = make_context()
+        asl_data = {"AcquisitionVoxelSize": [3.0, 3.0]}
+
+        proc._warn_if_voxel_geometry_missing(ctx, "asl.json", asl_data)
+
+        assert len(ctx.warnings) == 1
+        assert "voxel geometry is missing" in ctx.warnings[0]
+
+    def test_present_voxel_geometry_no_warning(
+        self,
+        make_processor: Callable[..., ASLProcessor],
+        make_context: Callable[..., ProcessingContext],
+    ) -> None:
+        """A complete AcquisitionVoxelSize produces no warning."""
+        proc = make_processor()
+        ctx = make_context()
+        asl_data = {"AcquisitionVoxelSize": [3.0, 3.0, 4.0]}
+
+        proc._warn_if_voxel_geometry_missing(ctx, "asl.json", asl_data)
+
+        assert ctx.warnings == []
