@@ -304,6 +304,7 @@ class ASLProcessor(BaseProcessor):
                 self._validate_tsv_data(
                     group, context, asl_filename, asl_data, file_format
                 )
+                self._warn_if_voxel_geometry_missing(context, asl_filename, asl_data)
 
     def _validate_m0_data(
         self,
@@ -538,6 +539,29 @@ class ASLProcessor(BaseProcessor):
                     f"For {asl_filename}, no M0 is provided and BS pulses with unknown timings are on, "
                     f"only a relative quantification is possible."
                 )
+
+    def _warn_if_voxel_geometry_missing(
+        self, context: ProcessingContext, asl_filename: str, asl_data: Dict[str, Any]
+    ) -> None:
+        """Warn when acquisition voxel geometry cannot be determined.
+
+        The report drops the in-plane resolution and slice-thickness clause when
+        'AcquisitionVoxelSize' is absent; this surfaces that omission to the user
+        instead of dropping it silently.
+
+        Args:
+            context: Processing context to update.
+            asl_filename: Name of ASL file.
+            asl_data: ASL data dictionary.
+        """
+        voxel_size = asl_data.get("AcquisitionVoxelSize")
+        if not isinstance(voxel_size, (list, tuple)) or len(voxel_size) < 3:
+            context.warnings.append(
+                f"Warning: Acquisition voxel geometry is missing for ASL file "
+                f"'{asl_filename}'; 'AcquisitionVoxelSize' is absent or "
+                f"incomplete, so in-plane resolution and slice thickness are "
+                f"omitted from the report."
+            )
 
     def _analyze_dicom_repetitions(
         self, asl_data: Dict[str, Any], context: ProcessingContext
