@@ -199,3 +199,19 @@ def test_ge_asl_repair_allowlist_covers_extractor_numeric_tags() -> None:
     }
 
     assert extractor_tags <= GE_ASL_REPAIR_TAGS
+
+
+def test_acquisition_voxel_size_from_dicom_geometry(tmp_path: Path) -> None:
+    """PixelSpacing + SliceThickness populate AcquisitionVoxelSize in mm."""
+    tags = _base_ge_tags("3dpcasl")
+    tags[dcm_tags.PIXEL_SPACING] = ("DS", [3.4, 3.4])
+    tags[dcm_tags.SLICE_THICKNESS] = ("DS", "4.0")
+    tags[dcm_tags.GE_LABEL_DURATION] = ("IS", "1450")
+    tags[dcm_tags.GE_INVERSION_TIME] = ("DS", "2025")
+    _write_dicom(tmp_path / "0001.dcm", tags)
+
+    metadata, _ = get_bids_metadata(
+        {"modality": ModalityTypeValues.ASL, "dicom_dir": str(tmp_path)}
+    )
+
+    assert metadata["AcquisitionVoxelSize"] == pytest.approx([3.4, 3.4, 4.0])
