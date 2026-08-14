@@ -67,8 +67,27 @@ class ReportGenerator:
         return int(rounded) if rounded == int(rounded) else rounded
 
     @staticmethod
+    def _within_tolerance(numbers: list[float], tol: float = 0.01) -> bool:
+        """Return whether all numbers lie within a fractional tolerance.
+
+        Args:
+            numbers: Numeric values to compare (must be non-empty).
+            tol: Maximum fractional spread, e.g. 0.01 for 1%.
+
+        Returns:
+            True when the spread (max - min) relative to the mean is <= `tol`.
+        """
+        lo, hi = min(numbers), max(numbers)
+        if lo == hi:
+            return True
+        mean = sum(numbers) / len(numbers)
+        if mean == 0:
+            return False
+        return (hi - lo) / abs(mean) <= tol
+
+    @staticmethod
     def _format_duration_list(value: object, unit: str = "ms") -> str:
-        """Format a duration value or list, collapsing identical entries.
+        """Format a duration value or list, collapsing near-identical entries.
 
         Args:
             value: Scalar duration, list/tuple of durations, or a missing value.
@@ -76,11 +95,23 @@ class ReportGenerator:
 
         Returns:
             "" when the value is missing, a single "<n><unit>" when a list holds
-            one unique value, otherwise the comma-joined values.
+            values that agree within 1%, otherwise the comma-joined values.
         """
         if ReportGenerator._is_missing(value):
             return ""
         if isinstance(value, (list, tuple)):
+            numbers = [
+                v
+                for v in value
+                if isinstance(v, (int, float)) and not isinstance(v, bool)
+            ]
+            if (
+                numbers
+                and len(numbers) == len(value)
+                and ReportGenerator._within_tolerance(numbers)
+            ):
+                mean = sum(numbers) / len(numbers)
+                return f"{ReportGenerator._fmt_num(mean)}{unit}"
             formatted = [ReportGenerator._fmt_num(v) for v in value]
             uniq = list(dict.fromkeys(formatted))  # de-duplicate, preserve order
             if len(uniq) == 1:
