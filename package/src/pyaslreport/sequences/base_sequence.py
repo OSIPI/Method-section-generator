@@ -58,6 +58,22 @@ class BaseSequence(ABC):
             repetition_time = dataset.get(dcm_tags.REPETITION_TIME, None).value
             bids["RepetitionTimePreparation"] = UnitConverterUtils.convert_milliseconds_to_seconds(repetition_time)
 
+        # AcquisitionVoxelSize [in-plane, in-plane, slice thickness] in mm, from
+        # DICOM geometry tags (PixelSpacing + SliceThickness). This is the
+        # reconstructed grid; the acquired resolution would need the acquisition
+        # matrix and FOV.
+        if dcm_tags.PIXEL_SPACING in dataset and dcm_tags.SLICE_THICKNESS in dataset:
+            pixel_spacing = dataset.get(dcm_tags.PIXEL_SPACING, None).value
+            slice_thickness = dataset.get(dcm_tags.SLICE_THICKNESS, None).value
+            try:
+                bids["AcquisitionVoxelSize"] = [
+                    float(pixel_spacing[0]),
+                    float(pixel_spacing[1]),
+                    float(slice_thickness),
+                ]
+            except (TypeError, ValueError, IndexError):
+                pass
+
         return bids 
 
     def convert_to_bids(self, dicom_dir: str, output_dir: str, bids_basename: str = "sub-01_asl", overwrite: bool = False):
