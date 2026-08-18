@@ -13,6 +13,7 @@ from pyaslreport.modalities import asl, testdsc
 from pyaslreport.sequences.factory import get_sequence
 from pyaslreport.utils import dicom_tags_utils as dcm_tags
 from pyaslreport.utils.dicom_repair_utils import repair_dicom_dataset_in_memory
+from pyaslreport.utils.metadata_override_utils import apply_sidecar_overrides
 
 from .modalities.registry import get_processor
 
@@ -48,7 +49,10 @@ def get_bids_metadata(data):
             "provided DICOM header"
         )
 
-    return sequence.extract_bids_metadata()
+    metadata = sequence.extract_bids_metadata()
+    metadata, _ = apply_sidecar_overrides(metadata, dicom_dir)
+
+    return metadata
 
 
 @dataclass
