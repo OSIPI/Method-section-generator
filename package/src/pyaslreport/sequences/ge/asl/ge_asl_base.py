@@ -1,6 +1,7 @@
 from operator import truediv
 
 from pyaslreport.sequences.ge.ge_base import GEBaseSequence
+from pyaslreport.utils import UnitConverterUtils
 from pyaslreport.utils import dicom_tags_utils as dcm_tags
 
 
@@ -21,6 +22,27 @@ class GEASLBase(GEBaseSequence):
         ):
             return None
         return str(elem.value).strip().lower()
+
+    @staticmethod
+    def _ms_to_seconds(
+        value: int | float | list[int | float],
+    ) -> int | float | list[int | float]:
+        """Convert GE timing values from milliseconds to BIDS seconds.
+
+        GE private tags store label duration, inversion time and the eASL
+        CV4/CV5 timings in milliseconds, whereas the rest of the pipeline
+        emits BIDS seconds (matching ``EchoTime`` and
+        ``RepetitionTimePreparation``). The processor later multiplies these
+        BIDS seconds back to milliseconds for the report, so normalizing GE
+        to seconds here avoids a spurious factor-of-1000 inflation.
+
+        Args:
+            value: Timing value(s) in milliseconds.
+
+        Returns:
+            The same value(s) expressed in seconds.
+        """
+        return UnitConverterUtils.convert_milliseconds_to_seconds(value)
 
     def _extract_ge_common_asl_metadata(self):
         bids_ge_asl = {}

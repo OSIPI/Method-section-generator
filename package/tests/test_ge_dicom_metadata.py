@@ -16,6 +16,7 @@ from pydicom.uid import ExplicitVRLittleEndian, generate_uid
 
 from pyaslreport import get_bids_metadata
 from pyaslreport.enums import ModalityTypeValues
+from pyaslreport.modalities.asl.processor import ASLProcessor
 from pyaslreport.utils import dicom_tags_utils as dcm_tags
 from pyaslreport.utils.dicom_repair_utils import GE_ASL_REPAIR_TAGS
 
@@ -117,9 +118,10 @@ def test_ge_asl_missing_internal_sequence_name_falls_back_to_single_pld(
         {"modality": ModalityTypeValues.ASL, "dicom_dir": str(tmp_path)}
     )
 
-    # Single-PLD extractor path: label duration + PLD from GE tags, single deltaM.
-    assert metadata["LabelingDuration"] == 1450
-    assert float(metadata["PostLabelingDelay"]) == 2025
+    # Single-PLD extractor path: GE milliseconds are normalized to BIDS seconds
+    # (1450 ms -> 1.45 s, 2025 ms -> 2.025 s); single deltaM + m0scan context.
+    assert metadata["LabelingDuration"] == pytest.approx(1.45)
+    assert float(metadata["PostLabelingDelay"]) == pytest.approx(2.025)
     assert asl_context == ["deltaM", "m0scan"]
 
 
@@ -150,8 +152,9 @@ def test_single_pld_repairs_binary_label_duration_and_selects_pld_header(
         {"modality": ModalityTypeValues.ASL, "dicom_dir": str(tmp_path)}
     )
 
-    assert metadata["LabelingDuration"] == 1450
-    assert float(metadata["PostLabelingDelay"]) == 2025
+    # Extractor emits BIDS seconds: 1450 ms -> 1.45 s, 2025 ms -> 2.025 s.
+    assert metadata["LabelingDuration"] == pytest.approx(1.45)
+    assert float(metadata["PostLabelingDelay"]) == pytest.approx(2.025)
     assert asl_context == ["deltaM", "m0scan"]
 
 
@@ -172,12 +175,12 @@ def test_easl_repairs_binary_cv_tags_and_generates_multi_pld(tmp_path: Path) -> 
         {"modality": ModalityTypeValues.ASL, "dicom_dir": str(tmp_path)}
     )
 
+    # CV4/CV5 are normalized ms -> s before the eASL timing math, so the
+    # emitted arrays are in BIDS seconds (previously x1000 too large).
     assert metadata["LabelingDuration"] == pytest.approx(
-        [1166.6666667, 1166.6666667, 1166.6666667]
+        [1.1666667, 1.1666667, 1.1666667]
     )
-    assert metadata["PostLabelingDelay"] == pytest.approx(
-        [1000.0, 2166.6666667, 3333.3333333]
-    )
+    assert metadata["PostLabelingDelay"] == pytest.approx([1.0, 2.1666667, 3.3333333])
     assert asl_context == ["deltaM", "deltaM", "m0scan"]
 
 
@@ -215,3 +218,36 @@ def test_acquisition_voxel_size_from_dicom_geometry(tmp_path: Path) -> None:
     )
 
     assert metadata["AcquisitionVoxelSize"] == pytest.approx([3.4, 3.4, 4.0])
+
+
+def test_ge_single_pld_timing_survives_processor_conversion_once(
+    tmp_path: Path,
+) -> None:
+    """GE timing round-trips to report milliseconds exactly once.
+
+    The GE extractor normalizes LabelingDuration/PostLabelingDelay to BIDS
+    seconds, and the ASL processor multiplies the time fields back to
+    milliseconds for the report. Chaining both must reproduce the original
+    GE millisecond values (1450 / 2025) rather than inflating them by 1000,
+    proving the conversion is applied a single time end to end.
+    """
+    tags = _base_ge_tags(sequence_name=None)
+    tags[dcm_tags.GE_LABEL_DURATION] = ("IS", "1450")
+    tags[dcm_tags.GE_INVERSION_TIME] = ("DS", "2025")
+    _write_dicom(tmp_path / "0001.dcm", tags)
+
+    metadata, _ = get_bids_metadata(
+        {"modality": ModalityTypeValues.ASL, "dicom_dir": str(tmp_path)}
+    )
+
+    # Extractor output is in BIDS seconds.
+    assert metadata["LabelingDuration"] == pytest.approx(1.45)
+    assert float(metadata["PostLabelingDelay"]) == pytest.approx(2.025)
+
+    processor = ASLProcessor.__new__(ASLProcessor)
+    session = dict(metadata)
+    processor._convert_units_to_milliseconds(session)
+
+    # Processor converts BIDS seconds back to milliseconds exactly once.
+    assert session["LabelingDuration"] == pytest.approx(1450)
+    assert session["PostLabelingDelay"] == pytest.approx(2025)

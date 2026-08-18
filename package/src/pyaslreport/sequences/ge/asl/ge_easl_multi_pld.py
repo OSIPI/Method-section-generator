@@ -36,13 +36,23 @@ class GEMultiPLD(GEASLBase):
 
         if npld == 1:
             # Single-PLD
-            bids["LabelingDuration"] = dataset.get(dcm_tags.GE_PRIVATE_CV5, None).value
-            bids["PostLabelingDelay"] = dataset.get(dcm_tags.GE_PRIVATE_CV4, None).value
+            bids["LabelingDuration"] = self._ms_to_seconds(
+                dataset.get(dcm_tags.GE_PRIVATE_CV5, None).value
+            )
+            bids["PostLabelingDelay"] = self._ms_to_seconds(
+                dataset.get(dcm_tags.GE_PRIVATE_CV4, None).value
+            )
         elif npld and npld > 1:
             # Multi-PLD
             cv4 = float(dataset.get(dcm_tags.GE_PRIVATE_CV4, 0).value)
             cv5 = float(dataset.get(dcm_tags.GE_PRIVATE_CV5, 0).value)
             cv7 = float(dataset.get(dcm_tags.GE_PRIVATE_CV7, 1).value)
+
+            # CV4 (initial PLD) and CV5 (total label duration) are stored in
+            # milliseconds; normalize to BIDS seconds before any timing math
+            # so the exponential T1 model and the emitted arrays are correct.
+            cv4 = self._ms_to_seconds(cv4)
+            cv5 = self._ms_to_seconds(cv5)
             magnetic_field_strength = float(
                 dataset.get(dcm_tags.MAGNETIC_FIELD_STRENGTH, 3).value
             )
