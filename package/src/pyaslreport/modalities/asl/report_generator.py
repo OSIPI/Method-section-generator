@@ -427,7 +427,12 @@ class ReportGenerator:
 
         # repetitions (guarded so a missing count never prints 'None')
         rep = ""
-        if not is_missing(total_acquired_pairs):
+        pattern_known = global_pattern not in (None, "", "pattern error")
+        if (
+            not is_missing(total_acquired_pairs)
+            and total_acquired_pairs != 0
+            and pattern_known
+        ):
             plural = total_acquired_pairs != 1
             label, noun = ReportGenerator._pattern_words(global_pattern, plural)
             verb = "were" if plural else "was"

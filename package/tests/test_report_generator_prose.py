@@ -111,3 +111,51 @@ def test_bolus_cutoff_delay_inconsistent_closes_parenthesis() -> None:
     assert out.startswith("(inconsistent")
     assert out.endswith(")"), out
     assert out.count("(") == out.count(")")
+
+
+class _Values(dict):
+    """Mapping yielding a well-formed (file, 'N/A') pair for absent keys."""
+
+    def get(self, key, default=None):
+        return self[key] if key in self else [("f", "N/A")]
+
+
+def _asl_report(global_pattern: str, total_acquired_pairs: object) -> str:
+    """Build an ASL report with all value-derived clauses empty.
+
+    Args:
+        global_pattern: Volume-ordering token, passed straight through.
+        total_acquired_pairs: Pair count, passed straight through.
+
+    Returns:
+        The basic ASL report paragraph.
+    """
+    report, _ = R.generate_asl_report(
+        _Values(),
+        {},
+        {},
+        global_pattern,
+        "Included",
+        total_acquired_pairs=total_acquired_pairs,
+        slice_number=18,
+    )
+    return report
+
+
+def test_repetitions_clause_present_for_valid_count() -> None:
+    """A known pattern with a positive count yields the totals sentence."""
+    assert "In total, 30 control-label pairs were acquired." in _asl_report(
+        "controllabel", 30
+    )
+
+
+def test_repetitions_clause_omitted_when_zero() -> None:
+    """A zero count drops the totals sentence entirely."""
+    assert "In total" not in _asl_report("controllabel", 0)
+
+
+def test_repetitions_clause_omitted_for_unknown_pattern() -> None:
+    """The 'pattern error' sentinel never leaks into the prose."""
+    report = _asl_report("pattern error", 1)
+    assert "In total" not in report
+    assert "pattern error" not in report
