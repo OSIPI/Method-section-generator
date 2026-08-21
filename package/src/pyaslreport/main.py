@@ -36,7 +36,7 @@ def get_bids_metadata(data):
     """
     Converts the provided data to BIDS format.
     :param data: Dictionary containing modality data.
-    :return: BIDS-formatted data.
+    :return: A (metadata, asl_context) pair for every vendor.
     """
     modality = data.get("modality")
     dicom_dir = data.get("dicom_dir")
@@ -52,7 +52,27 @@ def get_bids_metadata(data):
     metadata = sequence.extract_bids_metadata()
     metadata, _ = apply_sidecar_overrides(metadata, dicom_dir)
 
-    return metadata
+    return _normalize_metadata_shape(metadata)
+
+
+def _normalize_metadata_shape(metadata):
+    """Return a ``(metadata, asl_context)`` pair for every vendor.
+
+    GE already returns the pair; Siemens returns a bare metadata dict, from which
+    the ASL context is taken from a sidecar ``ASLContext`` string (routed out of
+    the metadata) or a sensible default. This keeps ``get_bids_metadata``'s
+    contract uniform so callers can always unpack two values.
+    """
+    if isinstance(metadata, (list, tuple)) and len(metadata) == 2:
+        return metadata[0], metadata[1]
+    if isinstance(metadata, dict):
+        context = metadata.pop("ASLContext", None)
+        if context:
+            asl_context = [v.strip() for v in str(context).split(",") if v.strip()]
+        else:
+            asl_context = ["deltaM", "m0scan"]
+        return metadata, asl_context
+    raise TypeError(f"Unexpected metadata shape: {type(metadata).__name__}")
 
 
 @dataclass

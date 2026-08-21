@@ -373,14 +373,16 @@ class TestDicomExampleRunner:
         assert loaded["mv"] == [4.0, 5.0]
         assert Path(tsv).read_text() == 'volume_type\n"deltam"\n"m0scan"\n'
 
-    def test_siemens_shaped_return_currently_raises(self, tmp_path: Path) -> None:
-        """Siemens returns a bare dict today, so the production-style unpack raises.
+    def test_siemens_runs_full_report(self, tmp_path: Path) -> None:
+        """Siemens now returns a (metadata, asl_context) pair and runs to a report.
 
-        Documents the current contract; flips when the vendor shape-fix lands.
+        get_bids_metadata normalizes the Siemens bare dict into a pair (routing any
+        sidecar ASLContext into the context), so the DICOM path no longer raises.
         """
         case = tmp_path / "case"
         asl_dir = case / "ASL"
         asl_dir.mkdir(parents=True)
         write_siemens_asl_dicom(asl_dir / "0001.dcm")
-        with pytest.raises(ValueError):
-            run_example(case)
+        report = run_example(case)
+        assert len(report) == 21
+        assert report["nifti_slice_number"] == 20
