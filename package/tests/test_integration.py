@@ -26,6 +26,7 @@ import nibabel as nib
 import numpy as np
 import pytest
 
+from tests.integration.compare import assert_report_matches
 from tests.integration.runner import (
     ExampleStructureError,
     PairingFallbackWarning,
@@ -65,11 +66,7 @@ def test_example_matches_expected(
 
     expected = load_expected(integration_case)
     actual = normalize(report)
-    assert set(actual.keys()) == set(
-        expected.keys()
-    ), f"{integration_case.name}: key set drift"
-    for key in sorted(expected.keys()):
-        assert actual[key] == expected[key], f"{integration_case.name}: '{key}' differs"
+    assert_report_matches(expected, actual, integration_case.name)
 
 
 # ---------------------------------------------------------------------------
@@ -261,3 +258,53 @@ class TestRunnerHarness:
         """nifti_slice_number reflects the synthesized slice axis."""
         case = _make_example(tmp_path, slices=27)
         assert run_example(case)["nifti_slice_number"] == 27
+
+
+class TestAssertReportMatches:
+    """Self-tests for the golden comparison helper (unmarked; runs in unit job)."""
+
+    def test_identical_reports_do_not_raise(self) -> None:
+        """Equal reports produce no error."""
+        report = {"basic_report": "hello", "nifti_slice_number": 20}
+        assert_report_matches(dict(report), dict(report), "case")
+
+    def test_prose_difference_shows_unified_diff(self) -> None:
+        """A changed report sentence appears as -old / +new lines."""
+        expected = {"basic_report": "TE = 10ms.\nSlices: 18."}
+        actual = {"basic_report": "TE = 10ms.\nSlices: 20."}
+        with pytest.raises(AssertionError) as exc:
+            assert_report_matches(expected, actual, "case")
+        message = str(exc.value)
+        assert "basic_report" in message
+        assert "-Slices: 18." in message
+        assert "+Slices: 20." in message
+
+    def test_structured_difference_shows_both_values(self) -> None:
+        """A differing structured field shows both expected and actual."""
+        with pytest.raises(AssertionError) as exc:
+            assert_report_matches(
+                {"nifti_slice_number": 18}, {"nifti_slice_number": 20}, "case"
+            )
+        message = str(exc.value)
+        assert "18" in message
+        assert "20" in message
+
+    def test_key_set_drift_is_reported(self) -> None:
+        """Keys only in expected or only in actual are both reported."""
+        with pytest.raises(AssertionError) as exc:
+            assert_report_matches({"a": 1, "b": 2}, {"a": 1, "c": 3}, "case")
+        message = str(exc.value)
+        assert "only in expected" in message and "b" in message
+        assert "only in actual" in message and "c" in message
+
+    def test_all_differences_reported_at_once(self) -> None:
+        """Every differing key is reported, not just the first."""
+        with pytest.raises(AssertionError) as exc:
+            assert_report_matches(
+                {"basic_report": "a", "nifti_slice_number": 18},
+                {"basic_report": "b", "nifti_slice_number": 20},
+                "case",
+            )
+        message = str(exc.value)
+        assert "basic_report" in message
+        assert "nifti_slice_number" in message
