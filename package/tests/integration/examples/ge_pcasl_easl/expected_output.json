@@ -1,0 +1,125 @@
+{
+  "major_errors": {},
+  "major_errors_concise": {},
+  "errors": {
+    "RepetitionTimePreparation": [
+      {
+        "Missing in files": [
+          "asl_0.json"
+        ]
+      }
+    ]
+  },
+  "errors_concise": {
+    "RepetitionTimePreparation": [
+      {
+        "Missing in files": [
+          "asl_0.json"
+        ]
+      }
+    ]
+  },
+  "warnings": {
+    "m0_warning": [
+      [
+        "Warning: Cannot determine M0 preparation timing for ASL file '_asl.json' because neither 'RepetitionTimePreparation' nor 'RepetitionTime' is present, but TSV file '_aslcontext.tsv' contains m0scan."
+      ]
+    ]
+  },
+  "warnings_concise": {},
+  "basic_report": "ASL was acquired on a 3.0T GE MEDICAL SYSTEMS DISCOVERY MR750 scanner. Multi-PLD PCASL labeling was performed with a 3D readout. The labeling duration was 1167ms, followed by PLDs of 1000ms (1 volume), 2167ms (1 volume), 3333ms (1 volume). Background suppression was applied using 4 pulses. Images were acquired with TE = 11.24ms, an in-plane resolution of 1.875x1.875mm^2, 20 slices, a slice thickness of 4.0mm, and a flip angle of 111 degrees. In total, 2 control-label pairs were acquired. M0 was acquired with the same readout and without background suppression.",
+  "extended_report": "ASL was acquired on a 3.0T GE MEDICAL SYSTEMS DISCOVERY MR750 scanner. Multi-PLD PCASL labeling was performed with a 3D readout. The labeling duration was 1167ms, followed by PLDs of 1000ms (1 volume), 2167ms (1 volume), 3333ms (1 volume). Background suppression was applied using 4 pulses. Images were acquired with TE = 11.24ms, an in-plane resolution of 1.875x1.875mm^2, 20 slices, a slice thickness of 4.0mm, and a flip angle of 111 degrees. In total, 2 control-label pairs were acquired. M0 was acquired with the same readout and without background suppression.",
+  "nifti_slice_number": 20,
+  "major_errors_concise_text": "",
+  "errors_concise_text": "Missing in files for \"RepetitionTimePreparation\": asl_0.json",
+  "warnings_concise_text": "",
+  "inconsistencies": "",
+  "major_inconsistencies": "",
+  "warning_inconsistencies": "",
+  "m0_concise_error": "",
+  "m0_concise_warning": "Warning: Cannot determine M0 preparation timing for ASL file '_asl.json' because neither 'RepetitionTimePreparation' nor 'RepetitionTime' is present, but TSV file '_aslcontext.tsv' contains m0scan.",
+  "asl_parameters": [
+    [
+      "Magnetic Field Strength",
+      "3.0T"
+    ],
+    [
+      "Manufacturer",
+      "GE MEDICAL SYSTEMS"
+    ],
+    [
+      "Manufacturer's Model Name",
+      "DISCOVERY MR750"
+    ],
+    [
+      "PLD Type",
+      "multi-PLD"
+    ],
+    [
+      "ASL Type",
+      "PCASL"
+    ],
+    [
+      "MR Acquisition Type",
+      "3D"
+    ],
+    [
+      "Pulse Sequence Type",
+      "3D"
+    ],
+    [
+      "Labeling Duration",
+      [
+        1166.667,
+        1166.667,
+        1166.667
+      ]
+    ],
+    [
+      "PLD",
+      "1000ms (1 volume), 2167ms (1 volume), 3333ms (1 volume)"
+    ],
+    [
+      "Background Suppression Number of Pulses",
+      4
+    ],
+    [
+      "Background Suppression",
+      "with"
+    ],
+    [
+      "Echo Time",
+      "11.24ms"
+    ],
+    [
+      "Repetition Time",
+      "N/A"
+    ],
+    [
+      "Flip Angle",
+      111.0
+    ],
+    [
+      "In-plane Resolution",
+      "1.875x1.875mm^2"
+    ],
+    [
+      "Slice Thickness",
+      "4.0mm"
+    ],
+    [
+      "Total Acquired Pairs",
+      2
+    ]
+  ],
+  "m0_parameters": [
+    [
+      "M0 Type",
+      "Included"
+    ]
+  ],
+  "extended_parameters": [],
+  "missing_required_parameters": {
+    "RepetitionTimePreparation": "s"
+  }
+}

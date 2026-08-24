@@ -1,0 +1,133 @@
+{
+  "major_errors": {
+    "ArterialSpinLabelingType": [
+      {
+        "Missing in files": [
+          "asl_0.json"
+        ]
+      }
+    ]
+  },
+  "major_errors_concise": {
+    "ArterialSpinLabelingType": [
+      {
+        "Missing in files": [
+          "asl_0.json"
+        ]
+      }
+    ]
+  },
+  "errors": {
+    "RepetitionTimePreparation": [
+      {
+        "Missing in files": [
+          "asl_0.json"
+        ]
+      }
+    ]
+  },
+  "errors_concise": {
+    "RepetitionTimePreparation": [
+      {
+        "Missing in files": [
+          "asl_0.json"
+        ]
+      }
+    ]
+  },
+  "warnings": {
+    "m0_warning": [
+      [
+        "Warning: Cannot determine M0 preparation timing for ASL file '_asl.json' because neither 'RepetitionTimePreparation' nor 'RepetitionTime' is present, but TSV file '_aslcontext.tsv' contains m0scan."
+      ]
+    ]
+  },
+  "warnings_concise": {},
+  "basic_report": "ASL was acquired on a 3.0T GE MEDICAL SYSTEMS DISCOVERY MR750 scanner. Single-PLD labeling was performed with a 3D readout. Background suppression was applied using 4 pulses, with pulses at 1465ms, 2100ms, 2600ms, and 2880ms after the start of labeling. Images were acquired with TE = 10.53ms, an in-plane resolution of 1.875x1.875mm^2, 20 slices, a slice thickness of 4.0mm, and a flip angle of 111 degrees. In total, 1 control-label pair was acquired. M0 was acquired with the same readout and without background suppression.",
+  "extended_report": "ASL was acquired on a 3.0T GE MEDICAL SYSTEMS DISCOVERY MR750 scanner. Single-PLD labeling was performed with a 3D readout. Background suppression was applied using 4 pulses, with pulses at 1465ms, 2100ms, 2600ms, and 2880ms after the start of labeling. Images were acquired with TE = 10.53ms, an in-plane resolution of 1.875x1.875mm^2, 20 slices, a slice thickness of 4.0mm, and a flip angle of 111 degrees. In total, 1 control-label pair was acquired. M0 was acquired with the same readout and without background suppression.",
+  "nifti_slice_number": 20,
+  "major_errors_concise_text": "Missing in files for \"ArterialSpinLabelingType\": asl_0.json",
+  "errors_concise_text": "Missing in files for \"RepetitionTimePreparation\": asl_0.json",
+  "warnings_concise_text": "",
+  "inconsistencies": "",
+  "major_inconsistencies": "",
+  "warning_inconsistencies": "",
+  "m0_concise_error": "",
+  "m0_concise_warning": "Warning: Cannot determine M0 preparation timing for ASL file '_asl.json' because neither 'RepetitionTimePreparation' nor 'RepetitionTime' is present, but TSV file '_aslcontext.tsv' contains m0scan.",
+  "asl_parameters": [
+    [
+      "Magnetic Field Strength",
+      "3.0T"
+    ],
+    [
+      "Manufacturer",
+      "GE MEDICAL SYSTEMS"
+    ],
+    [
+      "Manufacturer's Model Name",
+      "DISCOVERY MR750"
+    ],
+    [
+      "PLD Type",
+      "single-PLD"
+    ],
+    [
+      "ASL Type",
+      "N/A"
+    ],
+    [
+      "MR Acquisition Type",
+      "3D"
+    ],
+    [
+      "Pulse Sequence Type",
+      "3D"
+    ],
+    [
+      "Background Suppression Number of Pulses",
+      4
+    ],
+    [
+      "Background Suppression Pulse Time",
+      "1465ms, 2100ms, 2600ms, and 2880ms"
+    ],
+    [
+      "Background Suppression",
+      "with"
+    ],
+    [
+      "Echo Time",
+      "10.528ms"
+    ],
+    [
+      "Repetition Time",
+      "N/A"
+    ],
+    [
+      "Flip Angle",
+      111.0
+    ],
+    [
+      "In-plane Resolution",
+      "1.875x1.875mm^2"
+    ],
+    [
+      "Slice Thickness",
+      "4.0mm"
+    ],
+    [
+      "Total Acquired Pairs",
+      1
+    ]
+  ],
+  "m0_parameters": [
+    [
+      "M0 Type",
+      "Included"
+    ]
+  ],
+  "extended_parameters": [],
+  "missing_required_parameters": {
+    "RepetitionTimePreparation": "s"
+  }
+}
