@@ -56,6 +56,16 @@ class TestDiscoverSidecars:
         assert discover_sidecars("") == []
         assert discover_sidecars(None) == []
 
+    def test_excludes_output_named_json(self, tmp_path: Path) -> None:
+        """A report/golden JSON (name contains 'output') is not a sidecar."""
+        asl_dir = _make_session(tmp_path, "{}")  # writes studyPar.json in session
+        (asl_dir.parent / "expected_output.json").write_text("{}", encoding="utf-8")
+
+        found = [os.path.basename(f) for f in discover_sidecars(str(asl_dir))]
+
+        assert "studyPar.json" in found
+        assert "expected_output.json" not in found
+
 
 class TestLoadSidecar:
     """Loading and shape-checking of sidecar files."""

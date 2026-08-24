@@ -26,6 +26,7 @@ from typing import Any
 
 __all__ = [
     "SIDECAR_GLOBS",
+    "SIDECAR_NAME_EXCLUDES",
     "SEARCH_PARENT",
     "OVERRIDE_ALLOWLIST",
     "FIELD_ALIASES",
@@ -42,6 +43,11 @@ __all__ = [
 
 #: Filename patterns that count as a sidecar, searched in the given order.
 SIDECAR_GLOBS: tuple[str, ...] = ("*.json",)
+
+#: Case-insensitive substrings that DISQUALIFY a JSON from being treated as a
+#: sidecar. Guards against report/golden files (e.g. ``expected_output.json``)
+#: that sit next to the DICOMs, especially in integration example folders.
+SIDECAR_NAME_EXCLUDES: tuple[str, ...] = ("output",)
 
 #: Whether to also search the parent (session) folder of the DICOM directory.
 SEARCH_PARENT: bool = True
@@ -93,8 +99,9 @@ def discover_sidecars(dicom_dir: str | None) -> list[str]:
         dicom_dir: Directory the DICOM files were read from.
 
     Returns:
-        Absolute sidecar paths, de-duplicated and in a stable (sorted) order.
-        Empty when ``dicom_dir`` is falsy or nothing matches.
+        Absolute sidecar paths, de-duplicated and in a stable (sorted) order,
+        excluding any whose name matches :data:`SIDECAR_NAME_EXCLUDES`. Empty when
+        ``dicom_dir`` is falsy or nothing matches.
     """
     if not dicom_dir:
         return []
@@ -108,6 +115,9 @@ def discover_sidecars(dicom_dir: str | None) -> list[str]:
     for root in roots:
         for pattern in SIDECAR_GLOBS:
             for path in sorted(glob.glob(os.path.join(root, pattern))):
+                name = os.path.basename(path).lower()
+                if any(excl in name for excl in SIDECAR_NAME_EXCLUDES):
+                    continue
                 abs_path = os.path.abspath(path)
                 if abs_path not in seen:
                     seen.add(abs_path)
