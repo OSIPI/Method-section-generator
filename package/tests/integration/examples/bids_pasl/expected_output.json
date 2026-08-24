@@ -1,0 +1,133 @@
+{
+  "major_errors": {},
+  "major_errors_concise": {},
+  "errors": {
+    "m0_error": [
+      [
+        "ERROR: Discrepancy in 'EchoTime' for ASL file 'sub-Sub1_asl.json' and M0 file 'sub-Sub1_m0scan.json': ASL value = 11.92, M0 value = 16.14, difference = 4.22, exceeds error threshold 0.1"
+      ]
+    ]
+  },
+  "errors_concise": {},
+  "warnings": {
+    "m0_warning": [
+      [
+        "For sub-Sub1_asl.json, no M0 is provided and BS pulses with known timings are on. BS-pulse efficiency has to be calculated to enable absolute quantification."
+      ]
+    ]
+  },
+  "warnings_concise": {},
+  "basic_report": "ASL was acquired on a 3T Siemens TrioTim scanner. Multi-PLD FAIR PASL labeling was performed with a 3D GRASE readout. Labeling used inversion times of 300ms (1 repeat), 600ms (1 repeat), 900ms (1 repeat), 1200ms (1 repeat), 1500ms (1 repeat), 1800ms (1 repeat), 2100ms (1 repeat), 2400ms (1 repeat), 2700ms (1 repeat), 3000ms (1 repeat), with a labeling slab thickness of 115.5mm, with bolus saturation using a Q2TIPS pulse applied from 700ms to 1600ms after labeling. Background suppression was applied using 2 pulses, with pulses at 150ms and 200ms after the start of labeling. Images were acquired with TR/TE = 3500ms/11.92ms, an in-plane resolution of 8x4mm^2, 20 slices, a slice thickness of 6mm, and a flip angle of 180 degrees. In total, 10 label-control pairs were acquired. There is an inconsistency in EchoTime between the M0 and ASL scans. TR for M0 is 6000ms.",
+  "extended_report": "ASL was acquired on a 3T Siemens TrioTim scanner. Multi-PLD FAIR PASL labeling was performed with a 3D GRASE readout. Labeling used inversion times of 300ms (1 repeat), 600ms (1 repeat), 900ms (1 repeat), 1200ms (1 repeat), 1500ms (1 repeat), 1800ms (1 repeat), 2100ms (1 repeat), 2400ms (1 repeat), 2700ms (1 repeat), 3000ms (1 repeat), with a labeling slab thickness of 115.5mm, with bolus saturation using a Q2TIPS pulse applied from 700ms to 1600ms after labeling. Background suppression was applied using 2 pulses, with pulses at 150ms and 200ms after the start of labeling. Images were acquired with TR/TE = 3500ms/11.92ms, an in-plane resolution of 8x4mm^2, 20 slices, a slice thickness of 6mm, and a flip angle of 180 degrees. In total, 10 label-control pairs were acquired. There is an inconsistency in EchoTime between the M0 and ASL scans. TR for M0 is 6000ms.",
+  "nifti_slice_number": 20,
+  "major_errors_concise_text": "",
+  "errors_concise_text": "",
+  "warnings_concise_text": "",
+  "inconsistencies": "",
+  "major_inconsistencies": "",
+  "warning_inconsistencies": "",
+  "m0_concise_error": "EchoTime (M0): Discrepancy between ASL JSON and M0 JSON",
+  "m0_concise_warning": "For sub-Sub1_asl.json, no M0 is provided and BS pulses with known timings are on. BS-pulse efficiency has to be calculated to enable absolute quantification.",
+  "asl_parameters": [
+    [
+      "Magnetic Field Strength",
+      "3T"
+    ],
+    [
+      "Manufacturer",
+      "Siemens"
+    ],
+    [
+      "Manufacturer's Model Name",
+      "TrioTim"
+    ],
+    [
+      "PLD Type",
+      "multi-PLD"
+    ],
+    [
+      "PASL Type",
+      "FAIR"
+    ],
+    [
+      "ASL Type",
+      "PASL"
+    ],
+    [
+      "MR Acquisition Type",
+      "3D"
+    ],
+    [
+      "Pulse Sequence Type",
+      "GRASE"
+    ],
+    [
+      "Inversion Time",
+      "300ms (1 repeat), 600ms (1 repeat), 900ms (1 repeat), 1200ms (1 repeat), 1500ms (1 repeat), 1800ms (1 repeat), 2100ms (1 repeat), 2400ms (1 repeat), 2700ms (1 repeat), 3000ms (1 repeat)"
+    ],
+    [
+      "Labeling Slab Thickness",
+      "115.5mm"
+    ],
+    [
+      "Bolus Cutoff Technique",
+      "Q2TIPS"
+    ],
+    [
+      "Bolus Cutoff Delay Time",
+      "from 700ms to 1600ms"
+    ],
+    [
+      "Bolus Cutoff Flag",
+      "with"
+    ],
+    [
+      "Background Suppression Number of Pulses",
+      2
+    ],
+    [
+      "Background Suppression Pulse Time",
+      "150ms and 200ms"
+    ],
+    [
+      "Background Suppression",
+      "with"
+    ],
+    [
+      "Echo Time",
+      "11.92ms"
+    ],
+    [
+      "Repetition Time",
+      "3500ms"
+    ],
+    [
+      "Flip Angle",
+      180
+    ],
+    [
+      "In-plane Resolution",
+      "8x4mm^2"
+    ],
+    [
+      "Slice Thickness",
+      "6mm"
+    ],
+    [
+      "Total Acquired Pairs",
+      10
+    ]
+  ],
+  "m0_parameters": [
+    [
+      "M0 Type",
+      "Separate"
+    ],
+    [
+      "M0 TR",
+      6000
+    ]
+  ],
+  "extended_parameters": [],
+  "missing_required_parameters": {}
+}

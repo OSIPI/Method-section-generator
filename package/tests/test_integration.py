@@ -24,12 +24,21 @@ from typing import Any
 
 import nibabel as nib
 import numpy as np
+import pydicom
 import pytest
 
+from tests.integration._dicom_synth import (
+    write_ge_asl_dicom,
+    write_siemens_asl_dicom,
+)
+from tests.integration.compare import assert_report_matches
 from tests.integration.runner import (
     ExampleStructureError,
     PairingFallbackWarning,
+    _find_dicom_dir,
+    _write_dicom_inputs,
     build_inputs,
+    classify_example,
     discover_examples,
     load_expected,
     normalize,
@@ -65,11 +74,7 @@ def test_example_matches_expected(
 
     expected = load_expected(integration_case)
     actual = normalize(report)
-    assert set(actual.keys()) == set(
-        expected.keys()
-    ), f"{integration_case.name}: key set drift"
-    for key in sorted(expected.keys()):
-        assert actual[key] == expected[key], f"{integration_case.name}: '{key}' differs"
+    assert_report_matches(expected, actual, integration_case.name)
 
 
 # ---------------------------------------------------------------------------
@@ -261,3 +266,123 @@ class TestRunnerHarness:
         """nifti_slice_number reflects the synthesized slice axis."""
         case = _make_example(tmp_path, slices=27)
         assert run_example(case)["nifti_slice_number"] == 27
+
+
+class TestAssertReportMatches:
+    """Self-tests for the golden comparison helper (unmarked; runs in unit job)."""
+
+    def test_identical_reports_do_not_raise(self) -> None:
+        """Equal reports produce no error."""
+        report = {"basic_report": "hello", "nifti_slice_number": 20}
+        assert_report_matches(dict(report), dict(report), "case")
+
+    def test_prose_difference_shows_unified_diff(self) -> None:
+        """A changed report sentence appears as -old / +new lines."""
+        expected = {"basic_report": "TE = 10ms.\nSlices: 18."}
+        actual = {"basic_report": "TE = 10ms.\nSlices: 20."}
+        with pytest.raises(AssertionError) as exc:
+            assert_report_matches(expected, actual, "case")
+        message = str(exc.value)
+        assert "basic_report" in message
+        assert "-Slices: 18." in message
+        assert "+Slices: 20." in message
+
+    def test_structured_difference_shows_both_values(self) -> None:
+        """A differing structured field shows both expected and actual."""
+        with pytest.raises(AssertionError) as exc:
+            assert_report_matches(
+                {"nifti_slice_number": 18}, {"nifti_slice_number": 20}, "case"
+            )
+        message = str(exc.value)
+        assert "18" in message
+        assert "20" in message
+
+    def test_key_set_drift_is_reported(self) -> None:
+        """Keys only in expected or only in actual are both reported."""
+        with pytest.raises(AssertionError) as exc:
+            assert_report_matches({"a": 1, "b": 2}, {"a": 1, "c": 3}, "case")
+        message = str(exc.value)
+        assert "only in expected" in message and "b" in message
+        assert "only in actual" in message and "c" in message
+
+    def test_all_differences_reported_at_once(self) -> None:
+        """Every differing key is reported, not just the first."""
+        with pytest.raises(AssertionError) as exc:
+            assert_report_matches(
+                {"basic_report": "a", "nifti_slice_number": 18},
+                {"basic_report": "b", "nifti_slice_number": 20},
+                "case",
+            )
+        message = str(exc.value)
+        assert "basic_report" in message
+        assert "nifti_slice_number" in message
+
+
+class TestDicomExampleRunner:
+    """Self-tests for the DICOM example branch (unmarked; runs in unit job)."""
+
+    def _ge_case(self, root: Path, *, with_sidecar: bool = True) -> Path:
+        """Build a minimal GE single-PLD DICOM case under root/case/ASL."""
+        case = root / "case"
+        asl_dir = case / "ASL"
+        asl_dir.mkdir(parents=True)
+        write_ge_asl_dicom(asl_dir / "0001.dcm")
+        if with_sidecar:
+            (case / "studyPar.json").write_text(
+                json.dumps(
+                    {
+                        "BackgroundSuppression": True,
+                        "BackgroundSuppressionNumberPulses": 4,
+                        "BackgroundSuppressionPulseTime": [1.465, 2.1, 2.6, 2.88],
+                    }
+                )
+            )
+        return case
+
+    def test_classify_detects_dicom_and_bids(self, tmp_path: Path) -> None:
+        """A .dcm folder classifies as dicom; a perf/*_asl.json folder as bids."""
+        assert classify_example(self._ge_case(tmp_path / "d")) == "dicom"
+        assert classify_example(_make_example(tmp_path / "b")) == "bids"
+
+    def test_locate_dicom_dir_finds_asl_subfolder(self, tmp_path: Path) -> None:
+        """The DICOM directory is the ASL subfolder holding the .dcm files."""
+        assert _find_dicom_dir(self._ge_case(tmp_path)).name == "ASL"
+
+    def test_dicom_example_runs_full_report(self, tmp_path: Path) -> None:
+        """A GE case runs end to end to a 21-key report; slice count from the fixture."""
+        report = run_example(self._ge_case(tmp_path))
+        assert len(report) == 21
+        assert report["nifti_slice_number"] == 20
+
+    def test_c12_sidecar_reaches_report_prose(self, tmp_path: Path) -> None:
+        """studyPar pulse times reach the prose only when the sidecar is present."""
+        with_sidecar = run_example(self._ge_case(tmp_path / "with"))
+        without = run_example(self._ge_case(tmp_path / "without", with_sidecar=False))
+        assert "1465ms" in with_sidecar["basic_report"]
+        assert "1465ms" not in without["basic_report"]
+
+    def test_serialization_matches_backend_format(self, tmp_path: Path) -> None:
+        """_write_dicom_inputs serializes numpy/MultiValue and quotes tsv values."""
+        metadata = {
+            "arr": np.array([1, 2, 3]),
+            "mv": pydicom.multival.MultiValue(float, [4.0, 5.0]),
+        }
+        asl_json, tsv = _write_dicom_inputs(tmp_path, metadata, ["deltaM", "m0scan"])
+        loaded = json.loads(Path(asl_json).read_text())
+        assert loaded["arr"] == [1, 2, 3]
+        assert loaded["mv"] == [4.0, 5.0]
+        assert Path(tsv).read_text() == 'volume_type\n"deltam"\n"m0scan"\n'
+
+    def test_siemens_runs_full_report(self, tmp_path: Path) -> None:
+        """Siemens now returns a (metadata, asl_context) pair and runs to a report.
+
+        get_bids_metadata normalizes the Siemens bare dict into a pair (routing any
+        sidecar ASLContext into the context), so the DICOM path no longer raises.
+        """
+        case = tmp_path / "case"
+        asl_dir = case / "ASL"
+        asl_dir.mkdir(parents=True)
+        write_siemens_asl_dicom(asl_dir / "0001.dcm")
+        report = run_example(case)
+        assert len(report) == 21
+        assert report["nifti_slice_number"] == 20

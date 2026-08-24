@@ -50,11 +50,15 @@ match, which is rare.
 from __future__ import annotations
 
 import json
+import tempfile
 import warnings
 from pathlib import Path
 from typing import Any, Optional
 
-from pyaslreport import generate_report
+import numpy as np
+import pydicom
+
+from pyaslreport import generate_report, get_bids_metadata
 from pyaslreport.enums import ModalityTypeValues
 
 EXPECTED_FILENAME = "expected_output.json"
@@ -64,6 +68,8 @@ _M0_JSON = "_m0scan.json"
 _TSV = "_aslcontext.tsv"
 _NII_SUFFIXES = ("_asl.nii.gz", "_asl.nii")
 _SKIP_DIRS = {"derivatives", "sourcedata"}
+
+SAMPLE_NIFTI = Path(__file__).parent / "fixtures" / "sample_asl.nii.gz"
 
 
 class ExampleStructureError(ValueError):
@@ -236,27 +242,22 @@ def build_inputs(case: Path) -> tuple[list[str], str]:
 
 
 def discover_examples(base: Path) -> list[Path]:
-    """Return case dirs under `base` (immediate children with a perf/*_asl.json).
+    """Return case dirs under `base` (immediate children the runner can run).
 
-    Keys on inputs, not on expected_output.json, so --update-expected can
-    bootstrap a brand-new case. Missing/empty base yields [].
+    A child is a case when it classifies as DICOM or BIDS (see
+    ``classify_example``). Keys on inputs, not on expected_output.json, so
+    --update-expected can bootstrap a brand-new case. Missing/empty base yields [].
     """
     if not base.is_dir():
         return []
-    cases = []
-    for child in base.iterdir():
-        if not child.is_dir():
-            continue
-        if any(
-            p.name.endswith(_ASL_JSON)
-            for perf in _perf_dirs(child)
-            for p in perf.iterdir()
-        ):
-            cases.append(child)
-    return sorted(cases)
+    return sorted(
+        child
+        for child in base.iterdir()
+        if child.is_dir() and classify_example(child) != "none"
+    )
 
 
-def run_example(case: Path) -> dict[str, Any]:
+def _run_bids_example(case: Path) -> dict[str, Any]:
     """Run the BIDS report path on one example case directory."""
     files, nifti = build_inputs(case)
     return generate_report(
@@ -267,6 +268,142 @@ def run_example(case: Path) -> dict[str, Any]:
             "dcm_files": [],
         }
     )
+
+
+def default_serializer(obj: Any) -> Any:
+    """Serialize values ``json`` can't handle, matching the backend helper.
+
+    Mirrors ``apps/backend/app/utils/lib.py`` so the ``_asl.json`` written for a
+    DICOM example is byte-compatible with what ``get_report_dicom`` produces.
+    """
+    if isinstance(obj, pydicom.multival.MultiValue):
+        return list(obj)
+    if isinstance(obj, np.generic):
+        return obj.item()
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return str(obj)
+
+
+def _is_readable_dicom(path: Path) -> bool:
+    """Return True when ``path`` parses as a DICOM header."""
+    try:
+        pydicom.dcmread(str(path), stop_before_pixels=True)
+        return True
+    except Exception:
+        return False
+
+
+def _find_dicom_dir(case: Path) -> Optional[Path]:
+    """Locate a case's DICOM directory, or None if it isn't a DICOM case.
+
+    Resolution: an ``example.json`` ``dicom_subdir`` override; any ``*.dcm`` under
+    the case (its parent is the DICOM dir); otherwise, for extension-less DICOMs,
+    the first subfolder whose first file parses as DICOM. A BIDS layout
+    (perf/*_asl.json) short-circuits to None.
+    """
+    manifest = case / "example.json"
+    if manifest.is_file():
+        try:
+            sub = json.loads(manifest.read_text()).get("dicom_subdir")
+        except (json.JSONDecodeError, OSError):
+            sub = None
+        if sub:
+            candidate = case / sub
+            return candidate if candidate.is_dir() else None
+
+    dcms = sorted(case.rglob("*.dcm"))
+    if dcms:
+        return dcms[0].parent
+
+    if any(
+        p.name.endswith(_ASL_JSON) for perf in _perf_dirs(case) for p in perf.iterdir()
+    ):
+        return None
+
+    for directory in sorted(p for p in case.rglob("*") if p.is_dir()):
+        files = sorted(f for f in directory.iterdir() if f.is_file())
+        if files and _is_readable_dicom(files[0]):
+            return directory
+    return None
+
+
+def classify_example(case: Path) -> str:
+    """Return ``"dicom"``, ``"bids"``, or ``"none"`` for a case directory.
+
+    An ``example.json`` ``type`` field overrides detection; otherwise a DICOM
+    directory wins, then a perf/*_asl.json BIDS layout.
+    """
+    manifest = case / "example.json"
+    if manifest.is_file():
+        try:
+            declared = json.loads(manifest.read_text()).get("type")
+        except (json.JSONDecodeError, OSError):
+            declared = None
+        if declared in ("dicom", "bids"):
+            return declared
+
+    if _find_dicom_dir(case) is not None:
+        return "dicom"
+    if any(
+        p.name.endswith(_ASL_JSON) for perf in _perf_dirs(case) for p in perf.iterdir()
+    ):
+        return "bids"
+    return "none"
+
+
+def _write_dicom_inputs(
+    out_dir: Path, metadata: Any, asl_context: Any
+) -> tuple[str, str]:
+    """Write ``_asl.json`` and ``_aslcontext.tsv`` exactly as the backend does.
+
+    Returns the (asl_json, aslcontext_tsv) paths. The tsv header is ``volume_type``
+    followed by one lower-cased, quoted value per row.
+    """
+    asl_json = out_dir / "_asl.json"
+    asl_json.write_text(json.dumps(metadata, indent=2, default=default_serializer))
+    tsv = out_dir / "_aslcontext.tsv"
+    with tsv.open("w", newline="\n") as handle:
+        handle.write("volume_type\n")
+        for value in asl_context:
+            handle.write(f'"{str(value).lower()}"\n')
+    return str(asl_json), str(tsv)
+
+
+def _run_dicom_example(case: Path) -> dict[str, Any]:
+    """Run the DICOM report path on one case, mirroring ``get_report_dicom``.
+
+    Extracts BIDS metadata + context from the DICOMs (applying any C12 sidecar),
+    writes them to a temporary ``_asl.json`` / ``_aslcontext.tsv``, and runs
+    ``generate_report`` against the committed placeholder NIfTI (D-1a). The
+    ``metadata, asl_context`` unpack mirrors production: a vendor returning a bare
+    dict (Siemens today) raises here, by design.
+
+    Raises:
+        ExampleStructureError: If the case has no DICOM directory.
+    """
+    dicom_dir = _find_dicom_dir(case)
+    if dicom_dir is None:
+        raise ExampleStructureError(f"{case}: no DICOM directory found")
+    metadata, asl_context = get_bids_metadata(
+        {"modality": ModalityTypeValues.ASL, "dicom_dir": str(dicom_dir)}
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        asl_json, tsv = _write_dicom_inputs(Path(tmp), metadata, asl_context)
+        return generate_report(
+            {
+                "modality": ModalityTypeValues.ASL,
+                "files": [asl_json, tsv],
+                "nifti_file": str(SAMPLE_NIFTI),
+            }
+        )
+
+
+def run_example(case: Path) -> dict[str, Any]:
+    """Run one example case, auto-detecting DICOM vs BIDS."""
+    if classify_example(case) == "dicom":
+        return _run_dicom_example(case)
+    return _run_bids_example(case)
 
 
 def normalize(obj: Any) -> Any:

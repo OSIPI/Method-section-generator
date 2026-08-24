@@ -1,0 +1,136 @@
+{
+  "major_errors": {},
+  "major_errors_concise": {},
+  "errors": {},
+  "errors_concise": {},
+  "warnings": {
+    "m0_warning": [
+      [
+        "For sub-Sub1_asl.json, no M0 is provided and BS pulses with known timings are on. BS-pulse efficiency has to be calculated to enable absolute quantification."
+      ]
+    ]
+  },
+  "warnings_concise": {},
+  "basic_report": "ASL was acquired on a 3T Siemens TrioTim scanner. Multi-PLD PCASL labeling was performed with a 2D EPI readout. The labeling duration was 1400ms, followed by PLDs of 250ms (8 repeats), 500ms (8 repeats), 750ms (8 repeats), 1000ms (8 repeats), 1250ms (8 repeats), 1500ms (8 repeats). Background suppression was applied using 2 pulses, with pulses at 1428ms and 1604ms after the start of labeling. Images were acquired with TR/TE = 4050ms/14ms, an in-plane resolution of 3.4375x3.4375mm^2, 20 slices, a slice thickness of 4.05mm, and a flip angle of 90 degrees. In total, 48 label-control pairs were acquired. M0 was acquired with the same readout and without background suppression. TR for M0 is 4800ms.",
+  "extended_report": "ASL was acquired on a 3T Siemens TrioTim scanner. Multi-PLD PCASL labeling was performed with a 2D EPI readout. The labeling duration was 1400ms, followed by PLDs of 250ms (8 repeats), 500ms (8 repeats), 750ms (8 repeats), 1000ms (8 repeats), 1250ms (8 repeats), 1500ms (8 repeats). Background suppression was applied using 2 pulses, with pulses at 1428ms and 1604ms after the start of labeling. Images were acquired with TR/TE = 4050ms/14ms, an in-plane resolution of 3.4375x3.4375mm^2, 20 slices, a slice thickness of 4.05mm, and a flip angle of 90 degrees. In total, 48 label-control pairs were acquired. Balanced PCASL labeling was applied with the following pulse parameters: average 0.8mT/m and maximum pulse gradient 6mT/m, with 0.6ms pulses applied at 1ms intervals, with 20 degree flip angle. M0 was acquired with the same readout and without background suppression. TR for M0 is 4800ms.",
+  "nifti_slice_number": 20,
+  "major_errors_concise_text": "",
+  "errors_concise_text": "",
+  "warnings_concise_text": "",
+  "inconsistencies": "",
+  "major_inconsistencies": "",
+  "warning_inconsistencies": "",
+  "m0_concise_error": "",
+  "m0_concise_warning": "For sub-Sub1_asl.json, no M0 is provided and BS pulses with known timings are on. BS-pulse efficiency has to be calculated to enable absolute quantification.",
+  "asl_parameters": [
+    [
+      "Magnetic Field Strength",
+      "3T"
+    ],
+    [
+      "Manufacturer",
+      "Siemens"
+    ],
+    [
+      "Manufacturer's Model Name",
+      "TrioTim"
+    ],
+    [
+      "PLD Type",
+      "multi-PLD"
+    ],
+    [
+      "ASL Type",
+      "PCASL"
+    ],
+    [
+      "MR Acquisition Type",
+      "2D"
+    ],
+    [
+      "Pulse Sequence Type",
+      "EPI"
+    ],
+    [
+      "Labeling Duration",
+      1400
+    ],
+    [
+      "PLD",
+      "250ms (8 repeats), 500ms (8 repeats), 750ms (8 repeats), 1000ms (8 repeats), 1250ms (8 repeats), 1500ms (8 repeats)"
+    ],
+    [
+      "Background Suppression Number of Pulses",
+      2
+    ],
+    [
+      "Background Suppression Pulse Time",
+      "1428ms and 1604ms"
+    ],
+    [
+      "Background Suppression",
+      "with"
+    ],
+    [
+      "Echo Time",
+      "14ms"
+    ],
+    [
+      "Repetition Time",
+      "4050ms"
+    ],
+    [
+      "Flip Angle",
+      90
+    ],
+    [
+      "In-plane Resolution",
+      "3.4375x3.4375mm^2"
+    ],
+    [
+      "Slice Thickness",
+      "4.05mm"
+    ],
+    [
+      "Total Acquired Pairs",
+      48
+    ]
+  ],
+  "m0_parameters": [
+    [
+      "M0 Type",
+      "Separate"
+    ],
+    [
+      "M0 TR",
+      4800
+    ]
+  ],
+  "extended_parameters": [
+    [
+      "PCASL Type",
+      "balanced"
+    ],
+    [
+      "Labeling Pulse Average Gradient",
+      "0.8mT/m"
+    ],
+    [
+      "Labeling Pulse Maximum Gradient",
+      "6mT/m"
+    ],
+    [
+      "Labeling Pulse Duration",
+      "0.6ms"
+    ],
+    [
+      "Labeling Pulse Interval",
+      "1ms"
+    ],
+    [
+      "Labeling Pulse Flip Angle",
+      20
+    ]
+  ],
+  "missing_required_parameters": {}
+}

@@ -101,7 +101,7 @@ async def get_report_dicom(
         with open(f"{base_dir}/_aslcontext.tsv", "w") as f:
             f.write("volume_type\n")
             for value in asl_context:
-                f.write(f'"{value.lower()}"\n')
+                f.write(f"{value.lower()}\n")
 
         bids_data = {
             "modality": data["modality"],

@@ -1,6 +1,24 @@
 import json
 
 
+def _strip_surrounding_quotes(token: str) -> str:
+    """Remove one matching pair of surrounding quotes from a TSV token.
+
+    BIDS ``aslcontext.tsv`` values are unquoted, but some producers wrap them
+    in quotes; normalizing both keeps downstream volume-type matching working.
+
+    Args:
+        token: A whitespace-stripped TSV field.
+
+    Returns:
+        The token without a single pair of matching surrounding single or
+        double quotes, or unchanged when it is not quoted.
+    """
+    if len(token) >= 2 and token[0] == token[-1] and token[0] in ('"', "'"):
+        return token[1:-1]
+    return token
+
+
 class FileReader:
 
     @staticmethod
@@ -14,11 +32,11 @@ class FileReader:
             Parsed content of the file.
         """
         try:
-            file_stream = open(file_path, 'r')
-            if file_path.endswith('.json'):
+            file_stream = open(file_path, "r")
+            if file_path.endswith(".json"):
                 return FileReader._read_json(file_stream)
 
-            elif file_path.endswith('.tsv'):
+            elif file_path.endswith(".tsv"):
                 return FileReader._read_tsv(file_stream)
 
             else:
@@ -41,7 +59,9 @@ class FileReader:
              Parsed JSON data.
         """
         with file_stream as f:
-            content = f.read().strip()  # Read the content and strip any leading/trailing whitespace
+            content = (
+                f.read().strip()
+            )  # Read the content and strip any leading/trailing whitespace
             if content:  # Check if the file is not empty
                 data = json.loads(content)
                 return data
@@ -62,10 +82,10 @@ class FileReader:
         if not lines:
             return None
 
-        header = lines[0].strip()
+        header = _strip_surrounding_quotes(lines[0].strip())
 
-        if header != 'volume_type':
-            raise RuntimeError("Invalid TSV header, not \"volume_type\"")
+        if header != "volume_type":
+            raise RuntimeError('Invalid TSV header, not "volume_type"')
 
-        data = [line.strip() for line in lines[1:]]
+        data = [_strip_surrounding_quotes(line.strip()) for line in lines[1:]]
         return data
