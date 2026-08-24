@@ -1,0 +1,105 @@
+{
+  "major_errors": {},
+  "major_errors_concise": {},
+  "errors": {},
+  "errors_concise": {},
+  "warnings": {},
+  "warnings_concise": {},
+  "basic_report": "ASL was acquired on a 3T GE DISCOVERY_MR750 scanner. Single-PLD PCASL labeling was performed with a 3D spiral readout. The labeling duration was 1450ms, followed by a PLD of 2025ms. Background suppression was applied using 4 pulses, with pulses at 1965ms, 2600ms, 3100ms, and 3380ms after the start of labeling. Images were acquired with TR/TE = 4886ms/10.53ms, an in-plane resolution of 4x4mm^2, 20 slices, a slice thickness of 8mm, and a flip angle of 111 degrees. In total, 1 control-label pair was acquired. M0 was acquired with the same readout and without background suppression. TR for M0 is 4886ms.",
+  "extended_report": "ASL was acquired on a 3T GE DISCOVERY_MR750 scanner. Single-PLD PCASL labeling was performed with a 3D spiral readout. The labeling duration was 1450ms, followed by a PLD of 2025ms. Background suppression was applied using 4 pulses, with pulses at 1965ms, 2600ms, 3100ms, and 3380ms after the start of labeling. Images were acquired with TR/TE = 4886ms/10.53ms, an in-plane resolution of 4x4mm^2, 20 slices, a slice thickness of 8mm, and a flip angle of 111 degrees. In total, 1 control-label pair was acquired. M0 was acquired with the same readout and without background suppression. TR for M0 is 4886ms.",
+  "nifti_slice_number": 20,
+  "major_errors_concise_text": "",
+  "errors_concise_text": "",
+  "warnings_concise_text": "",
+  "inconsistencies": "",
+  "major_inconsistencies": "",
+  "warning_inconsistencies": "",
+  "m0_concise_error": "",
+  "m0_concise_warning": "",
+  "asl_parameters": [
+    [
+      "Magnetic Field Strength",
+      "3T"
+    ],
+    [
+      "Manufacturer",
+      "GE"
+    ],
+    [
+      "Manufacturer's Model Name",
+      "DISCOVERY_MR750"
+    ],
+    [
+      "PLD Type",
+      "single-PLD"
+    ],
+    [
+      "ASL Type",
+      "PCASL"
+    ],
+    [
+      "MR Acquisition Type",
+      "3D"
+    ],
+    [
+      "Pulse Sequence Type",
+      "spiral"
+    ],
+    [
+      "Labeling Duration",
+      1450
+    ],
+    [
+      "PLD",
+      "2025ms"
+    ],
+    [
+      "Background Suppression Number of Pulses",
+      4
+    ],
+    [
+      "Background Suppression Pulse Time",
+      "1965ms, 2600ms, 3100ms, and 3380ms"
+    ],
+    [
+      "Background Suppression",
+      "with"
+    ],
+    [
+      "Echo Time",
+      "10.528ms"
+    ],
+    [
+      "Repetition Time",
+      "4886ms"
+    ],
+    [
+      "Flip Angle",
+      111
+    ],
+    [
+      "In-plane Resolution",
+      "4x4mm^2"
+    ],
+    [
+      "Slice Thickness",
+      "8mm"
+    ],
+    [
+      "Total Acquired Pairs",
+      1
+    ]
+  ],
+  "m0_parameters": [
+    [
+      "M0 Type",
+      "Included"
+    ],
+    [
+      "M0 TR",
+      4886
+    ]
+  ],
+  "extended_parameters": [],
+  "missing_required_parameters": {}
+}
